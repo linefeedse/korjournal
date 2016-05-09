@@ -33,12 +33,16 @@ RUN apt-get install -y python3-dev python3-setuptools python3-pip
 
 # Django
 #
-RUN apt-get -y install python3-django python3-django-uwsgi uwsgi-plugin-python3
+RUN apt-get -y install python3-django python3-django-uwsgi uwsgi-plugin-python3 python3-djangorestframework
 RUN mkdir /var/log/uwsgi/
 
 # Flask
 #
 RUN apt-get -y install python3-flask
+
+# Pymysql
+#
+RUN apt-get -y install python3-pymysql
 
 # Supervisor and conf
 #
@@ -46,6 +50,8 @@ RUN apt-get install -y supervisor
 ADD ./conf/nginx-app.conf /etc/nginx/sites-enabled/nginx-app.conf
 ADD ./conf/supervisor-app.conf /etc/supervisor/conf.d/supervisor-app.conf
 RUN rm /etc/nginx/sites-enabled/default
+
+RUN apt-get -y install less
 
 EXPOSE 80
 CMD ["supervisord", "-n"]

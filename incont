@@ -1,0 +1,2 @@
+#!/bin/bash
+vagrant ssh -c "sudo docker exec -t -i korjournal /bin/bash -c 'cd /vagrant/www; $*'"
