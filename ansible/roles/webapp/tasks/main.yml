@@ -1,0 +1,12 @@
+- name: webapp start script
+  template:
+    src: runapp.sh.j2
+    dest: /root/runapp.sh
+    owner: root
+    group: root
+    mode: 0744
+  tags: [webapp]
+
+- name: run webapp start script
+  shell: /root/runapp.sh
+  tags: [webapp]

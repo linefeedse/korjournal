@@ -28,15 +28,24 @@
   ignore_errors: yes
   tags: ['mysql']
 
+- name: print create_db
+  debug: var=create_db
+
 - name: mysql user
   shell: /usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf -e "create user 'korjournal'@'%' identified by 'ReplaceDevPwd'"
-  when: create_db.changed
+  when: create_db.rc == 0
   ignore_errors: yes
   tags: ['mysql']
 
 - name: mysql perms
   shell: /usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf -e "grant all privileges on korjournal.* to 'korjournal'@'%'"
-  when: create_db.changed
+  when: create_db.rc == 0
+  ignore_errors: yes
+  tags: ['mysql']
+
+- name: block outside access to mysql
+  shell: iptables -I INPUT -i eth0 -p tcp --dport 3306 -j DROP
+  when: create_db.rc == 0
   ignore_errors: yes
   tags: ['mysql']
 

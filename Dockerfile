@@ -52,6 +52,7 @@ ADD ./conf/supervisor-app.conf /etc/supervisor/conf.d/supervisor-app.conf
 RUN rm /etc/nginx/sites-enabled/default
 
 RUN apt-get -y install less
+ADD ./www /vagrant/www
 
 EXPOSE 80
 CMD ["supervisord", "-n"]
