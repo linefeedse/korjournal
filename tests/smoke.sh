@@ -18,5 +18,5 @@ curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "GHI789", "group": "'$
 testodo=`date +%s`
 
 echo -n "Testing post of odometer $testodo..."
-curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/1/" }' -u abc:123 $api/odometersnap/ >/dev/null
-curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep $testodo || echo "OK"
+curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0649000" }' -u abc:123 $api/odometersnap/ >/dev/null
+curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep $testodo && echo "OK"

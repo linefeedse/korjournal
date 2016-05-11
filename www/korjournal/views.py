@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User, Group
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, filters
 from korjournal.models import Vehicle, OdometerSnap
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
@@ -38,6 +38,8 @@ class VehicleViewSet(viewsets.ModelViewSet):
 class OdometerSnapViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerSnapSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
+    filter_backends = (filters.OrderingFilter,)
+    ordering_fields = '__all__'
     
     def get_queryset(self):
         try:

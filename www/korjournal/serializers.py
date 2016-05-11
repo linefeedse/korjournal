@@ -24,5 +24,5 @@ class OdometerSnapSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.name')
     class Meta:
         model = OdometerSnap
-        fields = ('url','vehicle','odometer','uploadedby', 'owner')
+        fields = ('url','vehicle','odometer','uploadedby', 'owner', 'poslat', 'poslon', 'where')
 
