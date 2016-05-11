@@ -25,8 +25,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
 
 class VehicleViewSet(viewsets.ModelViewSet):
-    queryset = Vehicle.objects.all()
     serializer_class = VehicleSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
+
+    def get_queryset(self):
+        try:
+            usergroup = self.request.user.groups.all()[0]
+        except IndexError:
+            return ""
+        return Vehicle.objects.filter(name=usergroup)
  
 class OdometerSnapViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerSnapSerializer
