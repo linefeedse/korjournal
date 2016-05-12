@@ -17,7 +17,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class VehicleSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Vehicle
-        fields = ('url','name');
+        fields = ('url','name','group');
 
 class OdometerSnapSerializer(serializers.HyperlinkedModelSerializer):
     uploadedby = serializers.ReadOnlyField(source='uploadedby.username')

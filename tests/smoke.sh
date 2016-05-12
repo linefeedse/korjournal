@@ -1,7 +1,7 @@
 #!/bin/bash
 
 admin=admin:password123
-api=http://192.168.50.4/api
+api=http://korjournal.linefeed.se/api
 header1="Content-Type: application/json"
 header2="Accept: application/json; indent=4"
 
@@ -18,5 +18,5 @@ curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "GHI789", "group": "'$
 testodo=`date +%s`
 
 echo -n "Testing post of odometer $testodo..."
-curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0649000" }' -u abc:123 $api/odometersnap/ >/dev/null
+curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0649000", "where": "kurrekurreduttgatan \"3\", 12345 Ingalunda" }' -u abc:123 $api/odometersnap/ >/dev/null
 curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep $testodo && echo "OK"

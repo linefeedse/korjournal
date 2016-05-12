@@ -7,4 +7,4 @@ docker tag -f linefeedse/korjournal:latest korjournal:latest
 docker kill korjournal 2>/dev/null||true
 docker rm korjournal 2>/dev/null||true
 docker run --name=korjournal --hostname=korjournal --restart=always -d -e 80 -p 80:80 --add-host=db:$dockerhost korjournal:latest
-docker logs korjournal
+docker exec korjournal bash -c '( cd /vagrant/www; ./manage.py migrate )'

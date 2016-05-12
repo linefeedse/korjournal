@@ -28,9 +28,6 @@
   ignore_errors: yes
   tags: ['mysql']
 
-- name: print create_db
-  debug: var=create_db
-
 - name: mysql user
   shell: /usr/bin/mysql --defaults-file=/etc/mysql/debian.cnf -e "create user 'korjournal'@'%' identified by 'ReplaceDevPwd'"
   when: create_db.rc == 0

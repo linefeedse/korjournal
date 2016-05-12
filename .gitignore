@@ -63,3 +63,4 @@ target/
 
 .vagrant
 dockerpush.sh
+loopiaupdate.sh

@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 
 class Vehicle(models.Model):
-    name = models.CharField(max_length=64, blank=False, default='')
+    name = models.CharField(max_length=64, blank=False, unique=True)
     group = models.ForeignKey('auth.Group')
 
     def __str__(self):
