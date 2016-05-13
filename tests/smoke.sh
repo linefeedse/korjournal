@@ -1,7 +1,12 @@
 #!/bin/bash
 
+if [ -n "$1" ] ; then
+    host=$1
+else
+    host=korjournal.linefeed.se
+fi
 admin=admin:password123
-api=http://korjournal.linefeed.se/api
+api=http://$host/api
 header1="Content-Type: application/json"
 header2="Accept: application/json; indent=4"
 

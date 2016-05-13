@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+{% load bootstrap3 %}
+
+{% bootstrap_css %}
+<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+{% bootstrap_javascript %}
+<link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
+<script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
+<script src="/korjournal/js/editor.js?2"></script>
+{% block bootstrap3_content %}
+
+<div class="container">
+    <nav class="navbar navbar-default">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Navbar</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="#">Vänster</a></li>
+                <li><a href="#">Höger</a></li>
+            </ul>
+        </div>
+    </nav>
+<h2>Kilometerställningar</h2>
+
+{% if odo_snap_list %}
+<div>
+    {% for odo_snap in odo_snap_list %}
+    <div class="row">
+        <div class="col-md-8">
+            <h4>{{ odo_snap.odometer }}</h4>
+            <div class="col-md-6">
+                <h6>{{ odo_snap.vehicle }}</h6>
+            </div>
+            <div class="col-md-6">
+                {% if odo_snap.where and odo_snap.where != "" %}
+                <a href="#" class="streetaddress" id="where" data-type="text" data-pk="{{ odo_snap.id }}" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">{{ odo_snap.where }}</a>
+                {% else %}
+                <a href="#" class="streetaddress" id="where" data-type="text" data-pk="{{ odo_snap.id }}" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">Ingen adress</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <form action="{% url 'delete_odo_snap' odo_snap.id %}" method="post" class="form">
+              {% csrf_token %}
+              {% bootstrap_form form layout='inline' %}
+              {% buttons %}
+              <button type="submit" class="btn btn-danger">
+                {% bootstrap_icon "remove" %} Remove
+              </button>
+              {% endbuttons %}
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>Inga kilometerställningar ännu</p>
+{% endif %}
+</div>
+{% endblock %}

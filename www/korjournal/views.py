@@ -1,13 +1,36 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions, filters
 from korjournal.models import Vehicle, OdometerSnap
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
+from korjournal.forms import DeleteOdoSnapForm
 
 # Create your views here.
 def landing(request):
     return render(request, 'korjournal/landing.html', {})
+
+@login_required(login_url='/login')
+def editor(request):
+    odo_snap_list = OdometerSnap.objects.all()
+    form = DeleteOdoSnapForm()
+    context = { 'odo_snap_list': odo_snap_list, 'form': form }
+    return render(request, 'korjournal/editor.html', context)
+
+def delete_odo_snap(request,odo_snap_id):
+    odo_snap = get_object_or_404(OdometerSnap, pk=odo_snap_id)
+    form = DeleteOdoSnapForm(request.POST)
+    if form.is_valid():
+        odo_snap.delete()
+        return HttpResponseRedirect(reverse('editor'))
+
+    odo_snap_list = OdometerSnap.objects.all()
+    context = { 'odo_snap_list': odo_snap_list }
+    return render(request, 'korjournal/editor.html', context)
 
 class UserViewSet(viewsets.ModelViewSet):
     """

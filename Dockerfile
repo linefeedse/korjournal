@@ -44,6 +44,10 @@ RUN apt-get -y install python3-flask
 #
 RUN apt-get -y install python3-pymysql
 
+# Django-bootstrap3
+#
+RUN pip3 install django-bootstrap3
+
 # Supervisor and conf
 #
 RUN apt-get install -y supervisor
