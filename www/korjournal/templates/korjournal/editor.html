@@ -4,9 +4,13 @@
 {% bootstrap_css %}
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 {% bootstrap_javascript %}
+<script src="/korjournal/js/moment.min.js"></script>
 <link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
 <script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
-<script src="/korjournal/js/editor.js?2"></script>
+<script src="/inputs-ext/typeaheadjs/lib/typeahead.js"></script>
+<script src="/inputs-ext/typeaheadjs/typeaheadjs.js"></script>
+<script src="/korjournal/js/editor.js?5"></script>
+<meta name="why_typeahead" content='[{% for reason in odo_unique_reason %}"{{ reason.why }}",{% endfor %}"Okänt"]'>
 {% block bootstrap3_content %}
 
 <div class="container">
@@ -24,36 +28,64 @@
 <h2>Kilometerställningar</h2>
 
 {% if odo_snap_list %}
-<div>
+<table class="table table-striped">
+    <tr>
+        <td><b>Km</b></td>
+        <td><b>Fordon</b></td>
+        <td><b>Datum/Tid</b></td>
+        <td><b>Start/Mål</b></td>
+        <td><b>Adress</b></td>
+        <td><b>Syfte</b></td>
+        <td><b>Ta bort</b></td>
+    </tr>
     {% for odo_snap in odo_snap_list %}
-    <div class="row">
-        <div class="col-md-8">
-            <h4>{{ odo_snap.odometer }}</h4>
-            <div class="col-md-6">
-                <h6>{{ odo_snap.vehicle }}</h6>
-            </div>
-            <div class="col-md-6">
-                {% if odo_snap.where and odo_snap.where != "" %}
-                <a href="#" class="streetaddress" id="where" data-type="text" data-pk="{{ odo_snap.id }}" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">{{ odo_snap.where }}</a>
+    <tr>
+        <td>
+            <a href="#" class="kilometer" id="odometer" data-type="text" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Mätarställning"><b>{{ odo_snap.odometer }}</b></a>
+        </td>
+        <td>
+            <a href="#" class="vehicle" id="vehiclename" data-type="select" data-pk="0" data-value="{{ odo_snap.vehicle.id }}" data-source=
+                "[{% for vehicle in my_vehicles %}{value: {{ vehicle.id }}, text: '{{ vehicle.name }}'},{% endfor %}]"
+                data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Fordon">{{ odo_snap.vehicle }}</a>
+        </td>
+        <td>
+            <a href="#" class="datetime" id="when" data-type="combodate" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Datum/tid">{{ odo_snap.when|date:"Y-m-d" }} {{ odo_snap.when|time:"H:i" }}</a>
+        </td>
+        <td>
+            <a href="#" class="type" id="startfin" data-type="select" data-pk="0" data-source="[{value: 1, text: 'Start'},{value: 2, text: 'Mål'}]" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Start eller Slut">
+                {% if odo_snap.type == "1" %}
+                  {% bootstrap_icon "play" %}
                 {% else %}
-                <a href="#" class="streetaddress" id="where" data-type="text" data-pk="{{ odo_snap.id }}" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">Ingen adress</a>
+                  {% bootstrap_icon "stop" %}
                 {% endif %}
-            </div>
-        </div>
-        <div class="col-md-4">
+            </a>
+        </td>
+        <td>
+            {% if odo_snap.where and odo_snap.where != "" %}
+                <a href="#" class="streetaddress" id="where" data-type="text" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">{{ odo_snap.where }}</a>
+            {% else %}
+                <a href="#" class="streetaddress" id="where" data-type="text" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">Ingen adress</a>
+            {% endif %}
+        </td>
+        <td>
+            {% if odo_snap.type == "2" %}
+            <a href="#" class="reason" id="why" data-type="typeaheadjs" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Ärende/kund">{{ odo_snap.why }}</a>
+            {% endif %}
+        </td>
+        <td>
             <form action="{% url 'delete_odo_snap' odo_snap.id %}" method="post" class="form">
               {% csrf_token %}
               {% bootstrap_form form layout='inline' %}
               {% buttons %}
               <button type="submit" class="btn btn-danger">
-                {% bootstrap_icon "remove" %} Remove
+                {% bootstrap_icon "remove" %}
               </button>
               {% endbuttons %}
             </form>
-        </div>
-    </div>
+        </td>
+    </tr>
     {% endfor %}
-</div>
+</table>
 {% else %}
 <p>Inga kilometerställningar ännu</p>
 {% endif %}

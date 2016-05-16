@@ -4,6 +4,8 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import viewsets, permissions, filters
 from korjournal.models import Vehicle, OdometerSnap
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer
@@ -16,9 +18,18 @@ def landing(request):
 
 @login_required(login_url='/login')
 def editor(request):
-    odo_snap_list = OdometerSnap.objects.all()
+    try:
+        usergroup = request.user.groups.all()[0]
+        odo_snap_list = OdometerSnap.objects.filter(owner=usergroup).order_by('-when');
+        my_vehicles = Vehicle.objects.filter(group=usergroup)
+    except IndexError:
+        usergroup = "none"
+        odo_snap_list = OdometerSnap.objects.none()
+        my_vehicles = Vehicle.objects.none()
+    last_month = timezone.now() - timedelta(days=31)
+    odo_unique_reason = OdometerSnap.objects.filter(owner=usergroup,when__gt=last_month).values('why').distinct().order_by('why')
     form = DeleteOdoSnapForm()
-    context = { 'odo_snap_list': odo_snap_list, 'form': form }
+    context = { 'odo_snap_list': odo_snap_list, 'form': form, 'my_vehicles': my_vehicles, 'odo_unique_reason': odo_unique_reason }
     return render(request, 'korjournal/editor.html', context)
 
 def delete_odo_snap(request,odo_snap_id):
@@ -56,7 +67,7 @@ class VehicleViewSet(viewsets.ModelViewSet):
             usergroup = self.request.user.groups.all()[0]
         except IndexError:
             return ""
-        return Vehicle.objects.filter(name=usergroup)
+        return Vehicle.objects.filter(group=usergroup)
  
 class OdometerSnapViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerSnapSerializer
