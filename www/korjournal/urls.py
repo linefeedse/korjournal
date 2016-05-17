@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^$', views.landing, name='landing'),
     url(r'^editor/$', views.editor, name='editor'),
     url(r'^editor/(?P<odo_snap_id>[0-9]+)/delete$', views.delete_odo_snap, name='delete_odo_snap'),
+    url(r'^report/$', views.report, name='report'),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/$', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^login/', 'django.contrib.auth.views.login', name='login'),

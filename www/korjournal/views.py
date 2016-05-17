@@ -10,7 +10,8 @@ from rest_framework import viewsets, permissions, filters
 from korjournal.models import Vehicle, OdometerSnap
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
-from korjournal.forms import DeleteOdoSnapForm
+from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm
+import copy
 
 # Create your views here.
 def landing(request):
@@ -42,6 +43,72 @@ def delete_odo_snap(request,odo_snap_id):
     odo_snap_list = OdometerSnap.objects.all()
     context = { 'odo_snap_list': odo_snap_list }
     return render(request, 'korjournal/editor.html', context)
+
+@login_required(login_url='/login')
+def report(request):
+    year = '2016'
+    message = "Välj fordon och år"
+    try:
+        usergroup = request.user.groups.all()[0]
+        my_vehicles = Vehicle.objects.filter(group=usergroup)
+    except IndexError:
+        usergroup = "none"
+        my_vehicles = Vehicle.objects.none()
+
+    vehicle_choices = ()
+    for v in my_vehicles:
+        vehicle_choices = vehicle_choices + ((v.id,v.name),)
+
+    if request.method == 'POST':
+        message = "0 resor"
+        form = YearVehicleForm(request.POST,vehicles=vehicle_choices)
+        if form.is_valid():
+            vehicle_id = form.cleaned_data['vehicle']
+            year = form.cleaned_data['year']
+    else:
+        form = YearVehicleForm(vehicles=vehicle_choices)
+
+    try:
+        selected_vehicle = Vehicle.objects.filter(pk=vehicle_id)[0]
+        odo_snap_list = OdometerSnap.objects.filter(owner=usergroup,vehicle=selected_vehicle).order_by('when');
+    except (IndexError,UnboundLocalError):
+        odo_snap_list = OdometerSnap.objects.none()
+
+    trips = []
+    t = {}
+    for snap in odo_snap_list:
+
+        if (snap.type == "1"):
+            t['startid'] = snap.id
+            t['startodo'] = snap.odometer
+            t['startwhere'] = snap.where
+            t['startwhen'] = snap.when
+
+        if (snap.type == "2"):
+            t['endodo'] = snap.odometer
+            t['endwhere'] = snap.where
+            t['endwhen'] = snap.when
+            t['reason'] = snap.why
+
+            try:
+                if (t['endodo'] - t['startodo'] > 0):
+                    t['km'] = int(t['endodo']) - int(t['startodo'])
+            except KeyError:
+                t['km'] = 0
+            try:
+                if (t['startid']):
+                   trips.append(copy.deepcopy(t))
+            except KeyError:
+                pass
+            # Should the next position be another end, we put in this position as start
+            t['startid'] = snap.id
+            t['startodo'] = snap.odometer
+            t['startwhere'] = snap.where
+            t['startwhen'] = snap.when
+            message = "%d resor" % len(trips)
+
+    context = { 'reports': trips, 'year_vehicle_form': form, 'year': year, 'summary': message }
+    return render(request, 'korjournal/report.html', context)
 
 class UserViewSet(viewsets.ModelViewSet):
     """

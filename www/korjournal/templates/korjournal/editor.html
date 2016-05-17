@@ -1,9 +1,9 @@
 <!DOCTYPE html>
+{% extends "korjournal/base.html" %}
 {% load bootstrap3 %}
-
 {% bootstrap_css %}
-<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 {% bootstrap_javascript %}
+{% block extra_javascript %}
 <script src="/korjournal/js/moment.min.js"></script>
 <link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
 <script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
@@ -11,20 +11,8 @@
 <script src="/inputs-ext/typeaheadjs/typeaheadjs.js"></script>
 <script src="/korjournal/js/editor.js?5"></script>
 <meta name="why_typeahead" content='[{% for reason in odo_unique_reason %}"{{ reason.why }}",{% endfor %}"Okänt"]'>
-{% block bootstrap3_content %}
-
-<div class="container">
-    <nav class="navbar navbar-default">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#">Navbar</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="#">Vänster</a></li>
-                <li><a href="#">Höger</a></li>
-            </ul>
-        </div>
-    </nav>
+{% endblock %}
+{% block content %}
 <h2>Kilometerställningar</h2>
 
 {% if odo_snap_list %}
@@ -89,5 +77,4 @@
 {% else %}
 <p>Inga kilometerställningar ännu</p>
 {% endif %}
-</div>
 {% endblock %}

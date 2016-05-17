@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% block extra_javascript %}
+<meta name="why_typeahead" content='[{% for reason in odo_unique_reason %}"{{ reason.why }}",{% endfor %}"Okänt"]'>
+{% endblock %}
+{% block content %}
+
+<div class="row">
+<div class="col-md-5">
+    <h2>Körjournal</h2>
+</div>
+    <form action="{% url 'report' %}" method="post" class="form">
+        {% csrf_token %}
+        {% bootstrap_field year_vehicle_form.year size="small" layout="horizontal" horizontal_label_class="col-md-1 col-xs-1" horizontal_field_class="col-md-2 col-xs-2" %}
+        {% bootstrap_field year_vehicle_form.vehicle size="small" layout="horizontal" horizontal_label_class="col-md-1 col-xs-1" horizontal_field_class="col-md-2 col-xs-2" %}
+        {% buttons %}
+            <button type="submit" class="btn btn-success">
+              {% bootstrap_icon "ok" %}
+            </button>
+        {% endbuttons %}
+    </form>
+</div>
+
+
+{% if reports %}
+<table class="table table-bordered">
+    <tr>
+        <td><b>Datum</b></td>
+        <td><b>Start,km</b></td>
+        <td><b>Slut,km</b></td>
+        <td><b>Km</b></td>
+        <td><b>Från</b></td>
+        <td><b>Syfte</b></td>
+        <td><b>Till</b></td>
+    </tr>
+    {% for trip in reports %}
+    <tr>
+        <td>
+            {{ trip.endwhen|date:"Y-m-d" }}
+        </td>
+        <td>
+            {{ trip.startodo }}
+        </td>
+        <td>
+            {{ trip.endodo }}
+        </td>
+        <td>
+            {{ trip.km }}
+        </td>
+        <td>
+            {{ trip.startwhere }}
+        </td>
+        <td>
+            {{ trip.endwhere }}
+        </td>
+        <td>
+            {{ trip.reason }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+{{ summary }}
+{% endblock %}
