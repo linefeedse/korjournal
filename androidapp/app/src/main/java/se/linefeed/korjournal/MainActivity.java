@@ -1,5 +1,6 @@
 package se.linefeed.korjournal;
 
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private TextView mTextView;
     private Button odometerSend;
+    private Button cameraButton;
     private EditText odometerText;
     private RequestQueue requestQueue = null;
     private Spinner vehicleSpinner;
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mTextView = (TextView) findViewById(R.id.volleyTextView);
         odometerSend = (Button) findViewById(R.id.odometerSend);
+        cameraButton = (Button) findViewById(R.id.camerabutton);
         odometerText = (EditText) findViewById(R.id.odometerText);
         odometerText.setSelectAllOnFocus(true);
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
@@ -116,6 +119,13 @@ public class MainActivity extends AppCompatActivity implements
                 MainActivity.this.sendOdometersnap();
             }
         });
+        cameraButton.setClickable(true);
+        cameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View parent) {
+                MainActivity.this.startCameraActivity();
+            }
+        });
     }
 
     @Override
@@ -131,6 +141,11 @@ public class MainActivity extends AppCompatActivity implements
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
         }
+    }
+
+    private void startCameraActivity() {
+        Intent intent = new Intent(this, CameraActivity.class);
+        startActivity(intent);
     }
 
     private void onRequestResponse(String msg) {

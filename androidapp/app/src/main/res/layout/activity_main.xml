@@ -17,8 +17,7 @@
         <Spinner
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/vehicleSpinner"
-            android:background="@color/switch_thumb_disabled_material_light" />
+            android:id="@+id/vehicleSpinner"/>
 
         <LinearLayout
             android:orientation="horizontal"
@@ -47,6 +46,12 @@
             android:layout_height="wrap_content"
             android:text="Hello World!"
             android:id="@+id/volleyTextView" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Camera"
+            android:id="@+id/camerabutton" />
 
     </LinearLayout>
 
