@@ -1,49 +1,54 @@
 package se.linefeed.korjournal;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.support.v4.app.FragmentActivity;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -54,9 +59,10 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener {
 
-    private TextView mTextView;
+    private TextView statusText;
+    private TextView locationText;
     private Button odometerSend;
-    private Button cameraButton;
+    private ImageButton cameraButton;
     private EditText odometerText;
     private RequestQueue requestQueue = null;
     private Spinner vehicleSpinner;
@@ -68,6 +74,11 @@ public class MainActivity extends AppCompatActivity implements
     private final String API_URL = "http://korjournal.linefeed.se/api";
     private Location mLocation = null;
     private String streetAddress;
+    private ProgressBar sendProgress;
+    private ImageView odoImage;
+    private String odoImageFile = null;
+    private ImageButton deletePicButton;
+    private RadioButton radioIsStartButton, radioIsEndButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,9 +95,10 @@ public class MainActivity extends AppCompatActivity implements
                 .setFastestInterval(1 * 1000); // 1 second, in milliseconds
         setContentView(R.layout.activity_main);
 
-        mTextView = (TextView) findViewById(R.id.volleyTextView);
+        statusText = (TextView) findViewById(R.id.volleyTextView);
+        locationText = (TextView) findViewById(R.id.locationTextView);
         odometerSend = (Button) findViewById(R.id.odometerSend);
-        cameraButton = (Button) findViewById(R.id.camerabutton);
+        cameraButton = (ImageButton) findViewById(R.id.camerabutton);
         odometerText = (EditText) findViewById(R.id.odometerText);
         odometerText.setSelectAllOnFocus(true);
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
@@ -96,6 +108,11 @@ public class MainActivity extends AppCompatActivity implements
                 vehicleArr);
         myVehicles = new HashMap<String,String>();
         vehicleSpinner.setAdapter(vehicleSpinnerAdapter);
+        sendProgress = (ProgressBar) findViewById(R.id.progressBar);
+        odoImage = (ImageView) findViewById(R.id.odoImageView);
+        deletePicButton = (ImageButton) findViewById(R.id.picturedeletebtn);
+        radioIsStartButton = (RadioButton) findViewById(R.id.radio_isstart);
+        radioIsEndButton = (RadioButton) findViewById(R.id.radio_isend);
     }
 
     /**
@@ -112,13 +129,14 @@ public class MainActivity extends AppCompatActivity implements
             requestQueue = Volley.newRequestQueue(this);
         }
         requestVehicles();
-        odometerSend.setClickable(true);
-        odometerSend.setOnClickListener(new View.OnClickListener() {
+        Thread thread = new Thread() {
             @Override
-            public void onClick(View parent) {
-                MainActivity.this.sendOdometersnap();
+            public void run() {
+                loadLastOdoImage();
             }
-        });
+        };
+        thread.start();
+
         cameraButton.setClickable(true);
         cameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -126,6 +144,15 @@ public class MainActivity extends AppCompatActivity implements
                 MainActivity.this.startCameraActivity();
             }
         });
+        odometerSend.setClickable(true);
+        odometerSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View parent) {
+                MainActivity.this.sendOdometersnap();
+            }
+        });
+
+        sendProgress.setProgress(0);
     }
 
     @Override
@@ -149,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void onRequestResponse(String msg) {
-        mTextView.setText(msg);
+        statusText.setText(msg);
         odometerText.setText("");
         odometerSend.setText("Skicka");
         odometerSend.setClickable(true);
@@ -159,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onLocationChanged(Location location) {
         mLocation = location;
         if (mLocation != null) {
-            mTextView.setText(String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
+            locationText.setText(String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
         }
         Thread thread = new Thread() {
             @Override
@@ -168,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
         thread.start();
-        mTextView.setText("");
+        locationText.setText("");
     }
 
     private void updateStreetAddress() {
@@ -201,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mTextView.setText(streetAddress);//stuff that updates ui
+                    locationText.setText(streetAddress);//stuff that updates ui
 
                 }
             });
@@ -280,8 +307,19 @@ public class MainActivity extends AppCompatActivity implements
                     ", \"where\": \"%s\"",
                     streetAddress.replace("\"","''")));
         }
+        if (radioIsStartButton.isChecked()) {
+            body = body.concat(String.format(Locale.getDefault(),
+                    ", \"type\": \"%d\"",
+                    1));
+        }
+        if (radioIsEndButton.isChecked()) {
+            body = body.concat(String.format(Locale.getDefault(),
+                    ", \"type\": \"%d\"",
+                    2));
+        }
         body = body.concat(" }");
 
+        sendProgress.setProgress(30);
         MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.POST, url, body,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -289,6 +327,8 @@ public class MainActivity extends AppCompatActivity implements
                         try {
                             String odoSent = response.get("odometer").toString();
                             onRequestResponse("Skickade km: " + odoSent);
+                            sendProgress.setProgress(50);
+                            sendImageForOdo(response.get("url").toString());
                         }
                         catch (JSONException e)
                         {
@@ -300,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         onRequestResponse("Error!");
+                        sendProgress.setProgress(0);
                     }
                 }
         ) {
@@ -318,13 +359,108 @@ public class MainActivity extends AppCompatActivity implements
         requestQueue.add(req);
     }
 
+    private void sendImageForOdo(final String linkedOdo) {
+        final String url = API_URL + "/odometerimage/";
+        MyMultipartRequest request = new MyMultipartRequest(url, new Response.Listener<NetworkResponse>() {
+            @Override
+            public void onResponse(NetworkResponse response) {
+                String resultResponse = new String(response.data);
+                try {
+                    JSONObject result = new JSONObject(resultResponse);
+                    String status = result.getString("status");
+                    String message = result.getString("message");
+
+                    if (status.equals("200")) {
+                        // tell everybody you have succeed upload image and post strings
+                        Log.i("Message", message);
+                        File file = new File(odoImageFile);
+                        if (file.exists()) {
+                           // file.delete();
+                        }
+                        //loadLastOdoImage();
+                    } else {
+                        Log.i("Unexpected", message);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                NetworkResponse networkResponse = error.networkResponse;
+                String errorMessage = "Unknown error";
+                if (networkResponse == null) {
+                    if (error.getClass().equals(TimeoutError.class)) {
+                        errorMessage = "Request timeout";
+                    } else if (error.getClass().equals(NoConnectionError.class)) {
+                        errorMessage = "Failed to connect server";
+                    }
+                } else {
+                    String result = new String(networkResponse.data);
+                    try {
+                        JSONObject response = new JSONObject(result);
+                        String status = response.getString("status");
+                        String message = response.getString("message");
+
+                        Log.e("Error Status", status);
+                        Log.e("Error Message", message);
+
+                        if (networkResponse.statusCode == 404) {
+                            errorMessage = "Resource not found";
+                        } else if (networkResponse.statusCode == 401) {
+                            errorMessage = message+" Please login again";
+                        } else if (networkResponse.statusCode == 400) {
+                            errorMessage = message+ " Check your inputs";
+                        } else if (networkResponse.statusCode == 500) {
+                            errorMessage = message+" Something is getting wrong";
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Log.i("Error", errorMessage);
+                error.printStackTrace();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("odometersnap", linkedOdo);
+                return params;
+            }
+
+            @Override
+            protected Map<String, DataPart> getByteData() {
+                Map<String, DataPart> params = new HashMap<>();
+                try {
+                    params.put("odometerimage", new DataPart("odometerimage.jpg", odoImageFile, "image/jpeg"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return params;
+            }
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                String creds = String.format("%s:%s","abc","123");
+                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
+                headers.put("Authorization", auth);
+                return headers;
+            };
+        };
+
+        requestQueue.add(request);
+    }
+
     @Override
     public void onConnected(Bundle bundle) {
         Log.i(TAG, "Location services connected.");
         mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
 
         if (mLocation != null) {
-            mTextView.setText(String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
+            locationText.setText(String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
             Thread thread = new Thread() {
                 @Override
                 public void run() {
@@ -344,5 +480,46 @@ public class MainActivity extends AppCompatActivity implements
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.i(TAG, "Location services failed connecting.");
     }
+
+    private void loadLastOdoImage() {
+        File dir = new File(this.getExternalFilesDir(null),"korjournal");
+        File[] pictures = dir.listFiles();
+        if (pictures.length < 1) {
+            odoImageFile = null;
+            deletePicButton.setClickable(false);
+            return;
+        }
+        if (pictures.length > 1) {
+            Arrays.sort(pictures, new Comparator<File>() {
+                @Override
+                public int compare(File lhs, File rhs) {
+                    return Long.valueOf(rhs.lastModified()).compareTo(lhs.lastModified());
+                }
+            });
+        }
+        odoImageFile = pictures[0].getAbsolutePath();
+        Log.d("loadLastOdoImage", "Found file: " + odoImageFile);
+        final Bitmap bitmap = BitmapFactory.decodeFile(odoImageFile);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                odoImage.setImageBitmap(bitmap);
+            }
+        });
+        deletePicButton.setClickable(true);
+        deletePicButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View parent) {
+                        File file = new File(odoImageFile);
+                        if (file.exists()) {
+                            file.delete();
+                        }
+                        Log.d("loadLastOdoImage", "Deleted file: " + odoImageFile);
+                        loadLastOdoImage();
+                    }
+                });
+    }
+
 
 }
