@@ -55,6 +55,11 @@ ADD ./conf/nginx-app.conf /etc/nginx/sites-enabled/nginx-app.conf
 ADD ./conf/supervisor-app.conf /etc/supervisor/conf.d/supervisor-app.conf
 RUN rm /etc/nginx/sites-enabled/default
 
+# Tesseract OCR
+#
+RUN apt-get install -y tesseract-ocr
+RUN echo tessedit_char_whitelist 0123456789 > /usr/share/tesseract-ocr/tessdata/configs/digits
+
 RUN apt-get -y install less
 ADD ./www /vagrant/www
 

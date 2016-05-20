@@ -12,6 +12,8 @@ from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSeria
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
 from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm
 import copy
+import subprocess
+import sys
 
 # Create your views here.
 def landing(request):
@@ -159,7 +161,17 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self,serializer):
         usergroup = self.request.user.groups.all()[0]
-        serializer.save(owner=usergroup, uploadedby=self.request.user)
+        imgfile = self.request.FILES.get('imagefile')
+        odoimage = serializer.save(owner=usergroup, uploadedby=self.request.user, imagefile=imgfile)
+        if (odoimage.odometersnap.odometer < 1):
+            ocr = subprocess.run(["/usr/bin/tesseract", "/vagrant/www/media/" + odoimage.imagefile.name, "stdout", "nobatch", "digits"], stdout=subprocess.PIPE,universal_newlines=True).stdout
+            print(ocr,file=sys.stderr)
+            try:
+                newodokm = int(ocr.replace(" ",""))
+                odoimage.odometersnap.odometer = newodokm
+                odoimage.odometersnap.save()
+            except ValueError:
+                pass
 
     def get_queryset(self):
         try:
@@ -167,6 +179,3 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
         except IndexError:
             return ""
         return OdometerImage.objects.filter(owner=usergroup)
-
-    def pre_save(self,obj):
-        obj.imagefile = self.request.FILES.get('imagefile')

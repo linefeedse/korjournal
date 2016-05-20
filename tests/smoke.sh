@@ -31,4 +31,12 @@ curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results
 lastsnap=$(curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].url'|tail -1)
 lastsnap=$(eval echo $lastsnap)
 echo -n "Uploading image for lastsnap..."
+curl -X POST -s -H "$header2" -u "abc:123" -F "imagefile=@$scriptdir/odometerimage.jpg;type=image/jpg" -F 'odometersnap='$lastsnap $api/odometerimage/ | jq '.imagefile'
+
+echo "Testing ocr.."
+curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'0'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u abc:123 $api/odometersnap/ >/dev/null
+curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep $testodo && echo "OK"
+lastsnap=$(curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].url'|tail -1)
+lastsnap=$(eval echo $lastsnap)
 curl -X POST -s -H "$header2" -u "abc:123" -F "imagefile=@$scriptdir/45678.jpg;type=image/jpg" -F 'odometersnap='$lastsnap $api/odometerimage/ | jq '.imagefile'
+curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer'|tail -1
