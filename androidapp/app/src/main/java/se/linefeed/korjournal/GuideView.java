@@ -36,11 +36,11 @@ public class GuideView extends SurfaceView implements SurfaceHolder.Callback {
         if (width > height) {
             left=width*0.1f;
             right= width*0.9f;
-            top=height*0.3f;
-            bottom=height*0.7f;
+            top=height*0.35f;
+            bottom=height*0.65f;
         } else {
-            left = width*0.05f;
-            right = width*0.95f;
+            left = width*0.2f;
+            right = width*0.8f;
             top = height*0.45f;
             bottom =  height*0.55f;
         }

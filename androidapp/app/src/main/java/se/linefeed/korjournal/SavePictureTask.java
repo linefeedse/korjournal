@@ -36,13 +36,13 @@ class SavePictureTask extends AsyncTask<byte[], Void, Void> {
         int width,height,bottom,left;
         if (orientation == 0) {
             width = (int) (bm.getWidth() * 0.8f);
-            height = (int) (bm.getHeight() * 0.4f);
+            height = (int) (bm.getHeight() * 0.3f);
             left = (int) (bm.getWidth() * 0.1f);
-            bottom = (int) (bm.getHeight() * 0.3f);
+            bottom = (int) (bm.getHeight() * 0.35f);
         } else {
-            width = (int) (bm.getHeight() * 0.9f);
+            width = (int) (bm.getHeight() * 0.6f);
             height = (int) (bm.getWidth() * 0.1f);
-            left = (int) (bm.getHeight() * 0.05f);
+            left = (int) (bm.getHeight() * 0.2f);
             bottom = (int) (bm.getWidth() * 0.45f);
         }
 

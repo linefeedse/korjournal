@@ -31,4 +31,4 @@ curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results
 lastsnap=$(curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].url'|tail -1)
 lastsnap=$(eval echo $lastsnap)
 echo -n "Uploading image for lastsnap..."
-curl -X POST -s -H "$header2" -u "abc:123" -F "imagefile=@$scriptdir/odometerimage.jpg;type=image/jpg" -F 'odometersnap='$lastsnap $api/odometerimage/ | jq '.imagefile'
+curl -X POST -s -H "$header2" -u "abc:123" -F "imagefile=@$scriptdir/45678.jpg;type=image/jpg" -F 'odometersnap='$lastsnap $api/odometerimage/ | jq '.imagefile'

@@ -295,8 +295,16 @@ public class MainActivity extends AppCompatActivity implements
 
         odometerSend.setText("...");
         odometerSend.setClickable(false);
+        String odometer = odometerText.getText().toString();
+        try {
+            if (Integer.valueOf(odometer) < 1) {
+                odometer = "0";
+            }
+        } catch (NumberFormatException e) {
+            odometer = "0";
+        }
         String body = "{ \"vehicle\": \"" + vehicle +
-                "\", \"odometer\": \"" + odometerText.getText().toString() + "\"";
+                "\", \"odometer\": \"" + odometer + "\"";
         if (mLocation != null) {
             body = body.concat(String.format(Locale.US, ", \"poslat\": \"%f\", \"poslon\": \"%f\"",
                 mLocation.getLatitude(),
@@ -325,10 +333,10 @@ public class MainActivity extends AppCompatActivity implements
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            String odoSent = response.get("odometer").toString();
-                            onRequestResponse("Skickade km: " + odoSent);
+                            String odolink = response.get("url").toString();
+                            onRequestResponse("Sparat!");
                             sendProgress.setProgress(50);
-                            sendImageForOdo(response.get("url").toString());
+                            sendImageForOdo(odolink);
                         }
                         catch (JSONException e)
                         {
@@ -367,20 +375,16 @@ public class MainActivity extends AppCompatActivity implements
                 String resultResponse = new String(response.data);
                 try {
                     JSONObject result = new JSONObject(resultResponse);
-                    String status = result.getString("status");
-                    String message = result.getString("message");
 
-                    if (status.equals("200")) {
-                        // tell everybody you have succeed upload image and post strings
-                        Log.i("Message", message);
-                        File file = new File(odoImageFile);
-                        if (file.exists()) {
-                           // file.delete();
-                        }
-                        //loadLastOdoImage();
-                    } else {
-                        Log.i("Unexpected", message);
+                    String imagefile = result.getString("imagefile");
+                    sendProgress.setProgress(99);
+                    Log.i("INFO", "Successfully uploaded imagefile: " + imagefile);
+                    File file = new File(odoImageFile);
+                    if (file.exists()) {
+                        file.delete();
                     }
+                    loadLastOdoImage();
+                    sendProgress.setProgress(0);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -400,12 +404,12 @@ public class MainActivity extends AppCompatActivity implements
                     String result = new String(networkResponse.data);
                     try {
                         JSONObject response = new JSONObject(result);
-                        String status = response.getString("status");
-                        String message = response.getString("message");
-
-                        Log.e("Error Status", status);
-                        Log.e("Error Message", message);
-
+                        String message = null;
+                        try {
+                            message = response.getString("imagefile");
+                        } catch (JSONException e) {
+                            message = "no imagefile in response";
+                        }
                         if (networkResponse.statusCode == 404) {
                             errorMessage = "Resource not found";
                         } else if (networkResponse.statusCode == 401) {
@@ -413,7 +417,7 @@ public class MainActivity extends AppCompatActivity implements
                         } else if (networkResponse.statusCode == 400) {
                             errorMessage = message+ " Check your inputs";
                         } else if (networkResponse.statusCode == 500) {
-                            errorMessage = message+" Something is getting wrong";
+                            errorMessage = message+" Internal Server Error";
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();

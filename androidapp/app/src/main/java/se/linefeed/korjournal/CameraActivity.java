@@ -3,6 +3,7 @@ package se.linefeed.korjournal;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.hardware.Camera;
+import android.os.AsyncTask;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -79,8 +80,13 @@ public class CameraActivity extends AppCompatActivity {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
             Log.d("INFO", "onPictureTaken - jpeg data length "+ data.length);
-            new SavePictureTask(mContext).execute(data);
-            finish();
+            SavePictureTask spt = new SavePictureTask(mContext) {
+                @Override
+                protected void onPostExecute(Void v) {
+                    ((AppCompatActivity) mContext).finish();
+                }
+            };
+            spt.execute(data);
         }
     };
 }

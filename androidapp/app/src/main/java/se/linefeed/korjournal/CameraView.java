@@ -58,6 +58,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         } else {
             mCamera.setDisplayOrientation(90);
             mContext.cameraOrientation = 90;
+            setZoom(1.5f);
         }
         Log.d("CameraView","Orientation is now " + mContext.cameraOrientation);
         //now, recreate the camera preview
@@ -77,18 +78,18 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         mCamera.release();
     }
 
-    private void setZoom(int level) {
+    private void setZoom(float level) {
         Camera.Parameters parameters = mCamera.getParameters();
         if (!parameters.isZoomSupported()) {
             Log.i("INFO", "Zoom is not supported");
         } else {
             int maxZoom = parameters.getMaxZoom();
             Log.i("INFO", String.format(Locale.getDefault(), "Max zoom is %d", maxZoom));
-            if (maxZoom > 2) {
-                parameters.setZoom(maxZoom / level);
+            if (maxZoom > level) {
+                parameters.setZoom((int) (maxZoom / level));
                 mCamera.setParameters(parameters);
             } else {
-                Log.d("ERROR", "Max zoom is less than 2");
+                Log.d("ERROR", "Max zoom is less than asked for");
             }
         }
 
