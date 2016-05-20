@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity implements
             protected Map<String, DataPart> getByteData() {
                 Map<String, DataPart> params = new HashMap<>();
                 try {
-                    params.put("odometerimage", new DataPart("odometerimage.jpg", odoImageFile, "image/jpeg"));
+                    params.put("imagefile", new DataPart("odometerimage.jpg", odoImageFile, "image/jpeg"));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

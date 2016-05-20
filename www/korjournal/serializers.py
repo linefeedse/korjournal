@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from korjournal.models import OdometerSnap, Vehicle
+from korjournal.models import OdometerSnap, Vehicle, OdometerImage
 from rest_framework import serializers
 
 
@@ -26,3 +26,9 @@ class OdometerSnapSerializer(serializers.HyperlinkedModelSerializer):
         model = OdometerSnap
         fields = ('url','vehicle','odometer','uploadedby','owner','poslat','poslon','where','when','type','why')
 
+class OdometerImageSerializer(serializers.HyperlinkedModelSerializer):
+    uploadedby = serializers.ReadOnlyField(source='uploadedby.username')
+    owner = serializers.ReadOnlyField(source='owner.name')
+    class Meta:
+        model = OdometerImage
+        fields = ('url','odometersnap','imagefile','owner','uploadedby')

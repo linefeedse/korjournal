@@ -8,6 +8,7 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 router.register(r'odometersnap', views.OdometerSnapViewSet, "odometersnap")
+router.register(r'odometerimage', views.OdometerImageViewSet, "odometerimage")
 router.register(r'vehicle', views.VehicleViewSet, "vehicle")
 
 urlpatterns = [

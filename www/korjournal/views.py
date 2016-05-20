@@ -7,8 +7,8 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import viewsets, permissions, filters
-from korjournal.models import Vehicle, OdometerSnap
-from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer
+from korjournal.models import Vehicle, OdometerSnap, OdometerImage
+from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
 from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm
 import copy
@@ -152,3 +152,21 @@ class OdometerSnapViewSet(viewsets.ModelViewSet):
     def perform_create(self,serializer):
         matchinggroup = Group.objects.filter(name=serializer.validated_data['vehicle'])[0:1].get()
         serializer.save(owner=matchinggroup, uploadedby=self.request.user)
+
+class OdometerImageViewSet(viewsets.ModelViewSet):
+    serializer_class = OdometerImageSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
+
+    def perform_create(self,serializer):
+        usergroup = self.request.user.groups.all()[0]
+        serializer.save(owner=usergroup, uploadedby=self.request.user)
+
+    def get_queryset(self):
+        try:
+            usergroup = self.request.user.groups.all()[0]
+        except IndexError:
+            return ""
+        return OdometerImage.objects.filter(owner=usergroup)
+
+    def pre_save(self,obj):
+        obj.imagefile = self.request.FILES.get('imagefile')
