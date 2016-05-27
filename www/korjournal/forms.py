@@ -1,9 +1,14 @@
 from django.forms import ModelForm, Textarea, Form, ChoiceField
-from korjournal.models import OdometerSnap
+from korjournal.models import OdometerSnap, OdometerImage
 
 class DeleteOdoSnapForm(ModelForm):
     class Meta:
         model = OdometerSnap
+        fields = ['id']
+
+class DeleteOdoImageForm(ModelForm):
+    class Meta:
+        model = OdometerImage
         fields = ['id']
 
 class YearVehicleForm(Form):

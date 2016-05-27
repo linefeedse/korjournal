@@ -9,11 +9,11 @@
 <script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
 <script src="/inputs-ext/typeaheadjs/lib/typeahead.js"></script>
 <script src="/inputs-ext/typeaheadjs/typeaheadjs.js"></script>
-<script src="/korjournal/js/editor.js?5"></script>
+<script src="/korjournal/js/editor.js?6"></script>
 <meta name="why_typeahead" content='[{% for reason in odo_unique_reason %}"{{ reason.why }}",{% endfor %}"Okänt"]'>
 {% endblock %}
 {% block content %}
-<h2>Kilometerställningar</h2>
+<h2>Mätarställningar</h2>
 
 {% if odo_snap_list %}
 <table class="table table-striped">
@@ -29,10 +29,37 @@
     {% for odo_snap in odo_snap_list %}
     <tr>
         <td class="col-xs-2">
-            {% if odo_snap.odometerimage %}
-                <img src="/media/{{ odo_snap.odometerimage.imagefile }}" class="img-thumbnail"><br>
-            {% endif %}
             <a href="#" class="kilometer" id="odometer" data-type="text" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Mätarställning"><b>{{ odo_snap.odometer }}</b></a>
+            {% if odo_snap.odometerimage %}
+            <button type="button" class="btn" data-toggle="modal" data-target=".odoimage-modal-{{ odo_snap.odometerimage.id }}">
+                <img src="/media/{{ odo_snap.odometerimage.imagefile }}" alt="Radera bild" width="100%">
+            </button>
+            <div class="modal fade odoimage-modal-{{ odo_snap.odometerimage.id }}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4>Bild på mätarställning</h4>
+                        </div>
+                        <div class="modal-body">
+                            <img src="/media/{{ odo_snap.odometerimage.imagefile }}" alt="bild" width="100%">
+                            <form action="{% url 'delete_odo_image' odo_snap.odometerimage.id %}" method="post" class="form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">
+                                    Avbryt
+                                </button>
+                                <button type="submit" class="btn btn-danger">
+                                    {% bootstrap_icon "remove" %} Radera?
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <br>
+            {% endif %}
         </td>
         <td class="col-xs-1">
             <a href="#" class="vehicle" id="vehiclename" data-type="select" data-pk="0" data-value="{{ odo_snap.vehicle.id }}" data-source=

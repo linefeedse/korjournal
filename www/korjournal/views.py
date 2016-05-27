@@ -10,7 +10,7 @@ from rest_framework import viewsets, permissions, filters
 from korjournal.models import Vehicle, OdometerSnap, OdometerImage
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
-from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm
+from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm
 import copy
 import subprocess
 import sys
@@ -42,9 +42,7 @@ def delete_odo_snap(request,odo_snap_id):
         odo_snap.delete()
         return HttpResponseRedirect(reverse('editor'))
 
-    odo_snap_list = OdometerSnap.objects.all()
-    context = { 'odo_snap_list': odo_snap_list }
-    return render(request, 'korjournal/editor.html', context)
+    return editor(request)
 
 @login_required(login_url='/login')
 def report(request):
@@ -179,3 +177,12 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
         except IndexError:
             return ""
         return OdometerImage.objects.filter(owner=usergroup)
+
+def delete_odo_image(request,odo_image_id):
+    odo_image = get_object_or_404(OdometerImage, pk=odo_image_id)
+    form = DeleteOdoImageForm(request.POST)
+    if form.is_valid():
+        odo_image.delete()
+        return HttpResponseRedirect(reverse('editor'))
+
+    return editor(request)

@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^$', views.landing, name='landing'),
     url(r'^editor/$', views.editor, name='editor'),
     url(r'^editor/(?P<odo_snap_id>[0-9]+)/delete$', views.delete_odo_snap, name='delete_odo_snap'),
+    url(r'^editor/(?P<odo_image_id>[0-9]+)/deleteimage$', views.delete_odo_image, name='delete_odo_image'),
     url(r'^report/$', views.report, name='report'),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/$', include('rest_framework.urls', namespace='rest_framework')),
