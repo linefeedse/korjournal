@@ -1,0 +1,42 @@
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+    {% if form.errors %}
+      <div class="alert alert-danger">
+          <p><strong>Fel!</strong> Mata in ett mobiltelefonnummer</p>
+      </div>
+    {% endif %}
+        <form action="{% url 'register' %}" method="post" class="form-horizontal" role="form">{% csrf_token %}
+            <legend><span class="col-sm-offset-1">Ange ditt mobiltelefonnummer t.ex. 0701234567</span></legend>
+    <div class="form-group {% if form.phone.errors %}has-error{% endif %}">
+        <label for="{{ form.phone.id_for_label }}" class="col-sm-2 control-label">+46</label>
+        <div class="col-sm-10 ">
+            {{ form.phone }}
+            {% if form.phone.errors %}
+                <span class='text-danger'>{{ form.phone.errors|join:'<br />' }}</span>
+            {% endif %}
+            {% if form.phone.help_text %}
+                <span class="help-block ">{{ form.phone.help_text }}</span>
+            {% endif %}
+        </div>
+    </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" class="btn btn-default">Gå vidare</button>
+                  &nbsp;<button type="reset" class="btn">Avbryt</button>
+                </div>
+            </div>
+        </form>
+        <script type="text/javascript">
+            $(function(){
+                $(".alert-message").alert();
+                $('#mainForm').submit(function(){
+                    $('#submit').button('loading');
+                })
+            });
+            document.forms[1].elements[2].focus();
+        </script>
+{% endblock %}

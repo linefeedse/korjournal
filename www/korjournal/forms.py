@@ -1,5 +1,6 @@
-from django.forms import ModelForm, Textarea, Form, ChoiceField
+from django.forms import ModelForm, Textarea, Form, ChoiceField, CharField
 from korjournal.models import OdometerSnap, OdometerImage
+from django.core.validators import RegexValidator
 
 class DeleteOdoSnapForm(ModelForm):
     class Meta:
@@ -29,3 +30,13 @@ class YearVehicleForm(Form):
         super(YearVehicleForm, self).__init__(*args, **kwargs)
         if vehicles:
             self.fields['vehicle'].choices = vehicles
+
+class RegistrationForm(Form):
+    phone = CharField(error_messages={'incomplete': 'Ange ett mobiltelefonnummer'},
+                      validators=[RegexValidator(r'^[0-9]{9,11}$', 'Ange ett giltigt mobiltelefonnummer')])
+
+class VerificationForm(Form):
+    phone = CharField(error_messages={'incomplete': 'Ange ett mobiltelefonnummer'},
+                      validators=[RegexValidator(r'^[0-9]{9,11}$', 'Ange ett giltigt mobiltelefonnummer')])
+    code = CharField(error_messages={'incomplete': 'Ange den femsiffriga koden från ditt SMS'},
+                      validators=[RegexValidator(r'^[0-9]{5}$', 'Ange den femsiffriga koden från ditt SMS')])

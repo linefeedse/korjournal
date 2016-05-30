@@ -5,6 +5,7 @@
   roles:
     - mysql
     - docker
+    - secrets
     - unattended-upgrades
   tasks:
     - name: hosts

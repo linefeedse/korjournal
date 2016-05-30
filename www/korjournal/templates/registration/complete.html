@@ -1,0 +1,15 @@
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{% block content %}
+<h1>Tack!</h1>
+<h4>Du är nu registrerad.</h4>
+<form action="/login/" method="post">
+    {% csrf_token %}
+    <input type="hidden" id="id_username" name="username" value="{{ phone }}"/>
+    <input type="hidden" id="id_next" name="next" value="/vehicles/"/>
+    <input type="submit" class="btn btn-success" value="Logga in!"/>
+</form>
+{% endblock %}

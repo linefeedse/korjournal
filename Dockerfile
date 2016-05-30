@@ -60,6 +60,10 @@ RUN rm /etc/nginx/sites-enabled/default
 RUN apt-get install -y tesseract-ocr
 RUN echo tessedit_char_whitelist 0123456789 > /usr/share/tesseract-ocr/tessdata/configs/digits
 
+# Requests_oauthlib for sending SMS
+#
+RUN apt-get install -y python3-requests-oauthlib
+
 RUN apt-get -y install less
 ADD ./www /vagrant/www
 

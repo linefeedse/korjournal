@@ -42,10 +42,18 @@
             {{ trip.endwhen|date:"Y-m-d" }}
         </td>
         <td>
-            {{ trip.startodo }}
+            {% if trip.startimage %}
+                <img width="100" src="/media/{{ trip.startimage }}">
+            {% else %}
+                {{ trip.startodo }}
+            {% endif %}
         </td>
         <td>
-            {{ trip.endodo }}
+            {% if trip.endimage %}
+                <img width="100" src="/media/{{ trip.endimage }}">
+            {% else %}
+                {{ trip.endodo }}
+            {% endif %}
         </td>
         <td>
             {{ trip.km }}

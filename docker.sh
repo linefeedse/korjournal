@@ -6,5 +6,5 @@ cd /vagrant
 docker build -t korjournal:latest .
 docker kill korjournal 2>/dev/null||true
 docker rm korjournal 2>/dev/null||true
-docker run --name=korjournal --hostname=korjournal --restart=always -d -v /vagrant:/vagrant -e 80 -p 80:80 --add-host=db:$dockerhost korjournal:latest
+docker run --name=korjournal --hostname=korjournal --restart=always --env-file=/etc/docker/envfile.txt -d -v /vagrant:/vagrant -e 80 -p 80:80 --add-host=db:$dockerhost korjournal:latest
 docker logs korjournal

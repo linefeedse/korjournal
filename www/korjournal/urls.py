@@ -21,5 +21,8 @@ urlpatterns = [
     url(r'^api-auth/$', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^login/', 'django.contrib.auth.views.login', name='login'),
     url(r'^logout/', 'django.contrib.auth.views.logout', name='logout'),
+    url(r'^register/', views.doregister, name='register'),
+    url(r'^verify/', views.verify, name='verify'),
+    url(r'^registration_complete/', views.registration_complete, name='registration_complete'),
 ]
 

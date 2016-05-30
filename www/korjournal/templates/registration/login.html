@@ -6,7 +6,7 @@
 {% block content %}
     {% if form.errors %}
       <div class="alert alert-danger">
-          <p><strong>Fel!</strong>Mata in användarnamn (telefonnummer) och lösenord (kod från ditt sms)</p>
+          <p>Mata in användarnamn (telefonnummer) och lösenord (kod från ditt sms)</p>
       </div>
     {% endif %}
         <form action="{% url 'django.contrib.auth.views.login' %}" method="post" class="form-horizontal" role="form">{% csrf_token %}
@@ -22,7 +22,7 @@
             </div>
             <input type="hidden" name="next" value="{{ next }}" />
         </form>
-        <p><a href="#">Återställ mitt lösenord</a></p>
+        <p><a href="/register/">Återställ mitt lösenord</a></p>
         <script type="text/javascript">
             $(function(){
                 $(".alert-message").alert();

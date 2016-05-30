@@ -43,3 +43,8 @@ class OdometerImage(models.Model):
 
     def __str__(self):
         return "%s" % self.imagefile.name
+
+class RegisterCode(models.Model):
+    phone = models.IntegerField()
+    code = models.IntegerField()
+    when = models.DateTimeField(default=timezone.now)

@@ -3,17 +3,20 @@ from django.http import HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import viewsets, permissions, filters
-from korjournal.models import Vehicle, OdometerSnap, OdometerImage
-from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer
+from korjournal.models import Vehicle, OdometerSnap, OdometerImage, RegisterCode
+from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
-from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm
+from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm
 import copy
 import subprocess
 import sys
+import random
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
 def landing(request):
@@ -83,6 +86,10 @@ def report(request):
             t['startodo'] = snap.odometer
             t['startwhere'] = snap.where
             t['startwhen'] = snap.when
+            try:
+                t['startimage'] = snap.odometerimage.image
+            except ObjectDoesNotExist:
+                t['startimage'] = None
 
         if (snap.type == "2"):
             t['endodo'] = snap.odometer
@@ -90,21 +97,33 @@ def report(request):
             t['endwhen'] = snap.when
             t['reason'] = snap.why
 
+            t['km'] = 0
             try:
                 if (t['endodo'] - t['startodo'] > 0):
                     t['km'] = int(t['endodo']) - int(t['startodo'])
             except KeyError:
-                t['km'] = 0
+                pass
+
             try:
                 if (t['startid']):
                    trips.append(copy.deepcopy(t))
             except KeyError:
                 pass
+
+            try:
+                t['endimage'] = snap.odometerimage.image
+            except ObjectDoesNotExist:
+                t['endimage'] = None
+
             # Should the next position be another end, we put in this position as start
             t['startid'] = snap.id
             t['startodo'] = snap.odometer
             t['startwhere'] = snap.where
             t['startwhen'] = snap.when
+            try:
+                t['startimage'] = snap.odometerimage.image
+            except ObjectDoesNotExist:
+                t['startimage'] = None
             message = "%d resor" % len(trips)
 
     context = { 'reports': trips, 'year_vehicle_form': form, 'year': year, 'summary': message }
@@ -186,3 +205,57 @@ def delete_odo_image(request,odo_image_id):
         return HttpResponseRedirect(reverse('editor'))
 
     return editor(request)
+
+def make_register_code(phone):
+    random.seed()
+    code = random.randint(10000,99999)
+    serializer = RegisterCodeSerializer(data={'phone': phone, 'code': code})
+    if (serializer.is_valid()):
+        # The serializer will send the sms
+        serializer.save()
+    else:
+        die
+
+
+def doregister(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            phone = form.cleaned_data['phone']
+            make_register_code(phone)
+            return HttpResponseRedirect('/verify/?phone=%s' % phone)
+        else:
+            form = RegistrationForm(request.POST)
+            return render(request, 'registration/register.html', {'form': form})
+    form = RegistrationForm()
+    return render(request, 'registration/register.html', {'form': form,})
+
+def verify(request):
+    if request.method == 'POST':
+        form = VerificationForm(request.POST)
+        if form.is_valid():
+            phone = form.cleaned_data['phone']
+            code = form.cleaned_data['code']
+            validtime = timezone.now() - timedelta(hours=12)
+            try:
+                valid = RegisterCode.objects.filter(phone=phone,code=code,when__gt=validtime)[0]
+            except IndexError:
+                form.add_error('code','Den angivna koden är inte giltig')
+                return render(request, 'registration/verify.html', {'form': form, 'phone': phone})
+            try:
+                user = User.objects.filter(username=phone)[0]
+                user.password=make_password(code)
+            except IndexError:
+                user = User(username=phone,password=make_password(code));
+            user.save()
+            return HttpResponseRedirect('/registration_complete/?phone=%s' % phone)
+        else:
+            form = VerificationForm(request.POST)
+            return render(request, 'registration/verify.html', {'form': form,})
+    phone = request.GET['phone']
+    form = VerificationForm()
+    return render(request, 'registration/verify.html', {'form': form, 'phone': phone})
+
+def registration_complete(request):
+    phone = request.GET['phone']
+    return render(request, 'registration/complete.html', {'phone': phone})
