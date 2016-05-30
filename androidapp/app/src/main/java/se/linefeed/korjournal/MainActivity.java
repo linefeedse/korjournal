@@ -1,17 +1,22 @@
 package se.linefeed.korjournal;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -79,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements
     private String odoImageFile = null;
     private ImageButton deletePicButton;
     private RadioButton radioIsStartButton, radioIsEndButton;
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements
         deletePicButton = (ImageButton) findViewById(R.id.picturedeletebtn);
         radioIsStartButton = (RadioButton) findViewById(R.id.radio_isstart);
         radioIsEndButton = (RadioButton) findViewById(R.id.radio_isend);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
     /**
@@ -237,6 +244,9 @@ public class MainActivity extends AppCompatActivity implements
 
     private void requestVehicles() {
         final String url = API_URL + "/vehicle/";
+        final String username = sharedPreferences.getString("username_text","");
+        final String password = sharedPreferences.getString("code_text","");
+
         vehicleArr.clear();
         myVehicles.clear();
         MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.GET, url, null,
@@ -274,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s","abc","123");
+                String creds = String.format("%s:%s",username,password);
                 String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
                 headers.put("Authorization", auth);
                 return headers;
@@ -288,6 +298,9 @@ public class MainActivity extends AppCompatActivity implements
 
     private void sendOdometersnap() {
         final String url = API_URL + "/odometersnap/";
+        final String username = sharedPreferences.getString("username_text","");
+        final String password = sharedPreferences.getString("code_text","");
+
         String vehicle = myVehicles.get(vehicleSpinner.getSelectedItem().toString());
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(this);
@@ -356,7 +369,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s","abc","123");
+                String creds = String.format("%s:%s",username,password);
                 String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
                 headers.put("Authorization", auth);
                 return headers;
@@ -368,6 +381,8 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void sendImageForOdo(final String linkedOdo) {
+        final String username = sharedPreferences.getString("username_text","");
+        final String password = sharedPreferences.getString("code_text","");
         final String url = API_URL + "/odometerimage/";
         MyMultipartRequest request = new MyMultipartRequest(url, new Response.Listener<NetworkResponse>() {
             @Override
@@ -448,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s","abc","123");
+                String creds = String.format("%s:%s",username,password);
                 String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
                 headers.put("Authorization", auth);
                 return headers;
@@ -483,6 +498,28 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         Log.i(TAG, "Location services failed connecting.");
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.actionbar_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                // User chose the "Settings" item, show the app settings UI...
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     private void loadLastOdoImage() {

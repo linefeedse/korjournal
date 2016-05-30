@@ -17,6 +17,7 @@ import subprocess
 import sys
 import random
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 def landing(request):
@@ -217,6 +218,7 @@ def make_register_code(phone):
         die
 
 
+@csrf_exempt
 def doregister(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -230,6 +232,7 @@ def doregister(request):
     form = RegistrationForm()
     return render(request, 'registration/register.html', {'form': form,})
 
+@csrf_exempt
 def verify(request):
     if request.method == 'POST':
         form = VerificationForm(request.POST)
@@ -241,7 +244,7 @@ def verify(request):
                 valid = RegisterCode.objects.filter(phone=phone,code=code,when__gt=validtime)[0]
             except IndexError:
                 form.add_error('code','Den angivna koden är inte giltig')
-                return render(request, 'registration/verify.html', {'form': form, 'phone': phone})
+                return render(request, 'registration/verify.html', {'form': form, 'phone': phone}, status=404)
             try:
                 user = User.objects.filter(username=phone)[0]
                 user.password=make_password(code)
@@ -251,7 +254,7 @@ def verify(request):
             return HttpResponseRedirect('/registration_complete/?phone=%s' % phone)
         else:
             form = VerificationForm(request.POST)
-            return render(request, 'registration/verify.html', {'form': form,})
+            return render(request, 'registration/verify.html', {'form': form,}, status=400)
     phone = request.GET['phone']
     form = VerificationForm()
     return render(request, 'registration/verify.html', {'form': form, 'phone': phone})
