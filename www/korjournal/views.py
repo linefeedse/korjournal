@@ -88,7 +88,7 @@ def report(request):
             t['startwhere'] = snap.where
             t['startwhen'] = snap.when
             try:
-                t['startimage'] = snap.odometerimage.image
+                t['startimage'] = snap.odometerimage.imagefile
             except ObjectDoesNotExist:
                 t['startimage'] = None
 
@@ -112,7 +112,7 @@ def report(request):
                 pass
 
             try:
-                t['endimage'] = snap.odometerimage.image
+                t['endimage'] = snap.odometerimage.imagefile
             except ObjectDoesNotExist:
                 t['endimage'] = None
 
@@ -122,7 +122,7 @@ def report(request):
             t['startwhere'] = snap.where
             t['startwhen'] = snap.when
             try:
-                t['startimage'] = snap.odometerimage.image
+                t['startimage'] = snap.odometerimage.imagefile
             except ObjectDoesNotExist:
                 t['startimage'] = None
             message = "%d resor" % len(trips)

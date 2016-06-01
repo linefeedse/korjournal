@@ -19,6 +19,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
@@ -31,6 +32,11 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -255,6 +261,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
         private void tryRegisterCode(String newCode) {
             final String VER_URL = getString(R.string.url) + "/verify/";
+            final String CHK_URL = getString(R.string.url) + "/api/vehicle/";
             final String phone = PreferenceManager
                     .getDefaultSharedPreferences(usernamePreference.getContext())
                     .getString(usernamePreference.getKey(),"");
@@ -264,34 +271,57 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 mRequestQueue = Volley.newRequestQueue(getActivity());
             }
 
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, VER_URL, new Response.Listener<String>() {
+            // Before trying to verify, check if code is already ok
+            StringRequest checkRequest = new StringRequest(Request.Method.GET, CHK_URL, new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
                     Log.i("Info", "Server responded ok: " + response);
+                    codeText.setSummary("OK!");
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
                     Log.e("Error", "Server responded " + error.networkResponse.statusCode);
-                    codeText.setSummary("Ogiltig kod!");
+                    StringRequest verifyRequest = new StringRequest(Request.Method.POST, VER_URL, new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            Log.i("Info", "Server responded ok: " + response);
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e("Error", "Server responded " + error.networkResponse.statusCode);
+                            codeText.setSummary("Ogiltig kod!");
+                        }
+                    }) {
+                        @Override
+                        protected Map<String,String> getParams(){
+                            Map<String,String> params = new HashMap<String, String>();
+                            params.put("phone",phone);
+                            params.put("code", code);
+                            return params;
+                        }
+
+                        @Override
+                        public Map<String, String> getHeaders() throws AuthFailureError {
+                            Map<String,String> params = new HashMap<String, String>();
+                            params.put("Content-Type","application/x-www-form-urlencoded");
+                            return params;
+                        }
+                    };
+                    mRequestQueue.add(verifyRequest);
                 }
             }) {
-                @Override
-                protected Map<String,String> getParams(){
-                    Map<String,String> params = new HashMap<String, String>();
-                    params.put("phone",phone);
-                    params.put("code", code);
-                    return params;
-                }
 
-                @Override
                 public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String,String> params = new HashMap<String, String>();
-                    params.put("Content-Type","application/x-www-form-urlencoded");
-                    return params;
+                    HashMap<String, String> headers = new HashMap<String, String>();
+                    String creds = String.format("%s:%s",phone,code);
+                    String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
+                    headers.put("Authorization", auth);
+                    return headers;
                 }
             };
-            mRequestQueue.add(stringRequest);
+            mRequestQueue.add(checkRequest);
         }
 
     }
@@ -302,17 +332,51 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class VehiclePreferenceFragment extends PreferenceFragment {
+        protected Preference newVehicleName;
+        protected KorjournalAPI mApi = null;
+        protected ListPreference vehicleListPreference;
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_vehicles);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            //bindPreferenceSummaryToValue(findPreference("my_vehicles_list"));
+            vehicleListPreference = (ListPreference) findPreference("vehicle_list");
+            bindPreferenceSummaryToValue(vehicleListPreference);
+            updateVehicleList();
+            if (mApi == null) {
+                mApi = new KorjournalAPI(getActivity());
+            }
+
+            newVehicleName = (Preference)findPreference("new_vehicle_name");
+            newVehicleName.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(final Preference preference, Object newValue) {
+                    mApi.create_vehicle((String) newValue,
+                            new Response.Listener<JSONObject>() {
+                                @Override
+                                public void onResponse(JSONObject response) {
+                                    preference.setSummary("Nytt fordon skapades");
+                                    updateVehicleList();
+                                }
+                            },
+                            new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    preference.setSummary("Kunde inte skapa fordon");
+                                }
+                            }
+                    );
+                    return true;
+                }
+            });
+
+        }
+
+        @Override
+        public void onStart() {
+            updateVehicleList();
+            super.onStart();
         }
 
         @Override
@@ -322,7 +386,49 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 startActivity(new Intent(getActivity(), SettingsActivity.class));
                 return true;
             }
+
             return super.onOptionsItemSelected(item);
+        }
+
+        protected void updateVehicleList() {
+            final ArrayList<String> vehiclenames = new ArrayList<String>();
+            final ArrayList<String> vehicleids = new ArrayList<String>();
+            if (mApi == null) {
+                mApi = new KorjournalAPI(getActivity());
+            }
+            mApi.get_vehicles(
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                JSONArray vehicles = response.getJSONArray("results");
+                                for (int i=0; i < vehicles.length(); i++) {
+                                    JSONObject v = vehicles.getJSONObject(i);
+                                    vehiclenames.add(v.getString("name"));
+                                    vehicleids.add(v.getString("url"));
+                                }
+                                vehicleListPreference.setEntries(vehiclenames.toArray(new CharSequence[vehiclenames.size()]));
+                                vehicleListPreference.setEntryValues(vehicleids.toArray(new CharSequence[vehicleids.size()]));
+                            }
+                            catch (JSONException e)
+                            {
+                                CharSequence[] err = { "Inga fordon" };
+                                CharSequence[] errVal = { "0" };
+                                vehicleListPreference.setEntries(err);
+                                vehicleListPreference.setEntryValues(errVal);
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            CharSequence[] err = { "Kunde inte hämta fordon" };
+                            CharSequence[] errVal = { "0" };
+                            vehicleListPreference.setEntries(err);
+                            vehicleListPreference.setEntryValues(errVal);
+                        }
+                    }
+            );
         }
     }
 

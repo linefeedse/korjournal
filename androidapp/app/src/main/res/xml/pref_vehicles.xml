@@ -1,3 +1,19 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <ListPreference
+        android:defaultValue="-1"
+        android:key="vehicle_list"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/preselected_vehicle" />
+
+    <EditTextPreference
+        android:defaultValue="@string/new_vehicle_name"
+        android:inputType="text"
+        android:key="new_vehicle_name"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_create_vehicle" />
+
 </PreferenceScreen>
