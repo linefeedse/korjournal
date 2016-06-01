@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    $('[data-toggle="tooltip"]').tooltip();
     //toggle `popup` / `inline` mode
     $.fn.editable.defaults.mode = 'inline';
     $.fn.editable.defaults.emptytext = 'Inget';

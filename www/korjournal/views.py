@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required
@@ -8,16 +8,22 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import timedelta
 from rest_framework import viewsets, permissions, filters
-from korjournal.models import Vehicle, OdometerSnap, OdometerImage, RegisterCode
-from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer
-from korjournal.permissions import IsOwner, AnythingGoes, DenyAll
-from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm
+from rest_framework.decorators import api_view, permission_classes
+from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
+from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer, DriverSerializer
+from korjournal.permissions import IsOwner, AnythingGoes, DenyAll, IsDriver
+from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm
 import copy
 import subprocess
 import sys
 import random
+import json
+import pprint
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
+from django.http.request import RawPostDataException
+from django.db import IntegrityError
 
 # Create your views here.
 def landing(request):
@@ -25,18 +31,17 @@ def landing(request):
 
 @login_required(login_url='/login')
 def editor(request):
-    try:
-        usergroup = request.user.groups.all()[0]
-        odo_snap_list = OdometerSnap.objects.filter(owner=usergroup).order_by('-when');
-        my_vehicles = Vehicle.objects.filter(group=usergroup)
-    except IndexError:
-        usergroup = "none"
-        odo_snap_list = OdometerSnap.objects.none()
-        my_vehicles = Vehicle.objects.none()
+    odo_snap_list = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user)).order_by('-when')
+    for odo_snap in odo_snap_list:
+        if (odo_snap.vehicle.owner == request.user or odo_snap.driver == request.user):
+            odo_snap.editable = True
+        else:
+            odo_snap.editable = False
+    my_vehicles = Vehicle.objects.filter(Q(owner=request.user)|Q(driver__user=request.user))
     last_month = timezone.now() - timedelta(days=31)
-    odo_unique_reason = OdometerSnap.objects.filter(owner=usergroup,when__gt=last_month).values('why').distinct().order_by('why')
+    odo_unique_reason = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user),when__gt=last_month).values('why').distinct().order_by('why')
     form = DeleteOdoSnapForm()
-    context = { 'odo_snap_list': odo_snap_list, 'form': form, 'my_vehicles': my_vehicles, 'odo_unique_reason': odo_unique_reason }
+    context = { 'odo_snap_list': odo_snap_list, 'form': form, 'my_vehicles': my_vehicles, 'odo_unique_reason': odo_unique_reason, 'username': request.user.username }
     return render(request, 'korjournal/editor.html', context)
 
 def delete_odo_snap(request,odo_snap_id):
@@ -52,12 +57,7 @@ def delete_odo_snap(request,odo_snap_id):
 def report(request):
     year = '2016'
     message = "Välj fordon och år"
-    try:
-        usergroup = request.user.groups.all()[0]
-        my_vehicles = Vehicle.objects.filter(group=usergroup)
-    except IndexError:
-        usergroup = "none"
-        my_vehicles = Vehicle.objects.none()
+    my_vehicles = Vehicle.objects.filter(owner=request.user)
 
     vehicle_choices = ()
     for v in my_vehicles:
@@ -74,7 +74,7 @@ def report(request):
 
     try:
         selected_vehicle = Vehicle.objects.filter(pk=vehicle_id)[0]
-        odo_snap_list = OdometerSnap.objects.filter(owner=usergroup,vehicle=selected_vehicle).order_by('when');
+        odo_snap_list = OdometerSnap.objects.filter(vehicle__owner=request.user,vehicle=selected_vehicle,when__year=year).order_by('when');
     except (IndexError,UnboundLocalError):
         odo_snap_list = OdometerSnap.objects.none()
 
@@ -147,40 +147,62 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
+
+    def get_queryset(self):
+        return Vehicle.objects.filter(Q(owner=self.request.user)|Q(driver__user=self.request.user))
+
+    def perform_create(self,serializer):
+        serializer.save(owner=self.request.user)
+
+class DriverViewSet(viewsets.ModelViewSet):
+    serializer_class = DriverSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
 
     def get_queryset(self):
+        return Driver.objects.filter(vehicle__owner=self.request.user)
+
+    def create(self,request):
         try:
-            usergroup = self.request.user.groups.all()[0]
+            data = json.loads(self.request.body.decode('utf-8'))
+        except RawPostDataException:
+            data = request.data
+        try:
+            user = User.objects.filter(username=data['user'])[0]
         except IndexError:
-            return ""
-        return Vehicle.objects.filter(group=usergroup)
+            return HttpResponseNotFound('Användaren är ej registerad')
+        try:
+            vehicle = Vehicle.objects.filter(pk=data['vehicle'])[0]
+        except IndexError:
+            return HttpResponseNotFound('{"errors":{"vehicle": "Fordonet finns inte"}}')
+
+        try:
+            driver = Driver(user=user,vehicle=vehicle)
+            driver.save()
+        except IntegrityError:
+            return HttpResponseNotFound('Föraren finns redan på fordonet')
+        return HttpResponse('{"id": %d}' % driver.id)
+
  
 class OdometerSnapViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerSnapSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = '__all__'
     
     def get_queryset(self):
-        try:
-            usergroup = self.request.user.groups.all()[0]
-        except IndexError:
-            return ""
-        return OdometerSnap.objects.filter(owner=usergroup)
+        return OdometerSnap.objects.filter(Q(vehicle__owner=self.request.user)|Q(driver=self.request.user))
 
     def perform_create(self,serializer):
-        matchinggroup = Group.objects.filter(name=serializer.validated_data['vehicle'])[0:1].get()
-        serializer.save(owner=matchinggroup, uploadedby=self.request.user)
+        serializer.save(driver=self.request.user)
 
 class OdometerImageViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerImageSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
 
     def perform_create(self,serializer):
-        usergroup = self.request.user.groups.all()[0]
         imgfile = self.request.FILES.get('imagefile')
-        odoimage = serializer.save(owner=usergroup, uploadedby=self.request.user, imagefile=imgfile)
+        odoimage = serializer.save(driver=self.request.user, imagefile=imgfile)
         if (odoimage.odometersnap.odometer < 1):
             ocr = subprocess.run(["/usr/bin/tesseract", "/vagrant/www/media/" + odoimage.imagefile.name, "stdout", "nobatch", "digits"], stdout=subprocess.PIPE,universal_newlines=True).stdout
             print(ocr,file=sys.stderr)
@@ -192,11 +214,7 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
                 pass
 
     def get_queryset(self):
-        try:
-            usergroup = self.request.user.groups.all()[0]
-        except IndexError:
-            return ""
-        return OdometerImage.objects.filter(owner=usergroup)
+        return OdometerImage.objects.filter(Q(vehicle__owner=self.request.user)|Q(driver__user=self.request.user))
 
 def delete_odo_image(request,odo_image_id):
     odo_image = get_object_or_404(OdometerImage, pk=odo_image_id)
@@ -262,3 +280,32 @@ def verify(request):
 def registration_complete(request):
     phone = request.GET['phone']
     return render(request, 'registration/complete.html', {'phone': phone})
+
+@login_required(login_url='/login?next=/vehicles')
+def vehicles(request):
+    my_vehicles = Vehicle.objects.filter(owner=request.user)
+    for vehicle in my_vehicles:
+        vehicle.driver = Driver.objects.filter(vehicle=vehicle)
+    drive_vehicles = Vehicle.objects.filter(driver__user=request.user)
+    form = DeleteVehicleForm()
+    context = { 'form': form, 'my_vehicles': my_vehicles, 'drive_vehicles': drive_vehicles, 'username': request.user.username}
+    return render(request, 'korjournal/vehicles.html', context)
+
+def delete_vehicle(request,vehicle_id):
+    vehicle = get_object_or_404(Vehicle, pk=vehicle_id)
+    form = DeleteVehicleForm(request.POST)
+    if form.is_valid():
+        vehicle.delete()
+        return HttpResponseRedirect(reverse('vehicles'))
+    return vehicles(request)
+
+
+@api_view(('POST',))
+@permission_classes((IsOwner,))
+def delete_driver(request,driver_id):
+    driver = get_object_or_404(Driver, pk=driver_id)
+    form = DeleteDriverForm(request.POST)
+    if form.is_valid():
+        driver.delete()
+        return HttpResponseRedirect(reverse('vehicles'))
+    return vehicles(request)

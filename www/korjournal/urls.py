@@ -10,6 +10,7 @@ router.register(r'groups', views.GroupViewSet)
 router.register(r'odometersnap', views.OdometerSnapViewSet, "odometersnap")
 router.register(r'odometerimage', views.OdometerImageViewSet, "odometerimage")
 router.register(r'vehicle', views.VehicleViewSet, "vehicle")
+router.register(r'driver', views.DriverViewSet, "vehicle")
 
 urlpatterns = [
     url(r'^$', views.landing, name='landing'),
@@ -24,5 +25,8 @@ urlpatterns = [
     url(r'^register/', views.doregister, name='register'),
     url(r'^verify/', views.verify, name='verify'),
     url(r'^registration_complete/', views.registration_complete, name='registration_complete'),
+    url(r'^vehicles/$', views.vehicles, name='vehicles'),
+    url(r'^vehicles/(?P<vehicle_id>[0-9]+)/delete$', views.delete_vehicle, name='delete_vehicle'),
+    url(r'^vehicles/(?P<driver_id>[0-9]+)/deletedriver$', views.delete_driver, name='delete_driver'),
 ]
 

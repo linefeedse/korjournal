@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from korjournal.models import OdometerSnap, Vehicle, OdometerImage, RegisterCode
+from korjournal.models import OdometerSnap, Vehicle, OdometerImage, RegisterCode, Driver
 from rest_framework import serializers
 import requests
 from requests_oauthlib import OAuth1Session
@@ -21,21 +21,19 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class VehicleSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Vehicle
-        fields = ('url','name','group');
+        fields = ('url','name','owner');
 
 class OdometerSnapSerializer(serializers.HyperlinkedModelSerializer):
-    uploadedby = serializers.ReadOnlyField(source='uploadedby.username')
-    owner = serializers.ReadOnlyField(source='owner.name')
+    driver = serializers.ReadOnlyField(source='driver.username')
     class Meta:
         model = OdometerSnap
-        fields = ('url','vehicle','odometer','uploadedby','owner','poslat','poslon','where','when','type','why')
+        fields = ('url','vehicle','odometer','driver','poslat','poslon','where','when','type','why')
 
 class OdometerImageSerializer(serializers.HyperlinkedModelSerializer):
-    uploadedby = serializers.ReadOnlyField(source='uploadedby.username')
-    owner = serializers.ReadOnlyField(source='owner.name')
+    driver = serializers.ReadOnlyField(source='driver.username')
     class Meta:
         model = OdometerImage
-        fields = ('url','odometersnap','imagefile','owner','uploadedby')
+        fields = ('url','odometersnap','imagefile','driver')
 
 class RegisterCodeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,3 +60,16 @@ class RegisterCodeSerializer(serializers.ModelSerializer):
             logger.error('Return code %d from sms gateway' % res.status_code)
             die
         return code
+
+class DriverSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Driver
+        fields = ('vehicle','user')
+
+    def create(self,validated_data):
+        try:
+            user = User.objects.filter(username=validated_data['user'])[0]
+            vehicle = Vehicle.objects.filter(id=validated_data['vehicle'])[0]
+        except IndexError:
+            return None
+        driver = Driver(user=user,vehicle=vehicle)

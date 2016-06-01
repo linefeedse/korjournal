@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% block extra_javascript %}
+<script src="/korjournal/js/moment.min.js"></script>
+<link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
+<script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
+<script src="/inputs-ext/typeaheadjs/lib/typeahead.js"></script>
+<script src="/inputs-ext/typeaheadjs/typeaheadjs.js"></script>
+<script src="/korjournal/js/vehicles.js?2"></script>
+<meta name="why_typeahead" content='[{% for reason in odo_unique_reason %}"{{ reason.why }}",{% endfor %}"Okänt"]'>
+{% endblock %}
+{% block content %}
+<h2>Mina fordon</h2>
+
+<table class="table table-striped">
+    <tr>
+        <td class="col-xs-1"><b>&nbsp;</b></td>
+        <td class="col-xs-6">
+            <b>Namn</b>
+            <button type="button" class="btn btn-xs btn-info" data-toggle="tooltip" title="Använd t.ex. bilens registreringsnummer.">
+                <b>?</b>
+            </button>
+        </td>
+        <td class="col-xs-5">
+            <b>Förare</b>
+            <button type="button" class="btn btn-xs btn-info" data-toggle="tooltip" title="En förare är en annan registrerad användare som också skall få rapportera på fordonet. Ange användarnamnet (telefonnumret) här.">
+                <b>?</b>
+            </button>
+        </td>
+    </tr>
+{% if my_vehicles %}
+    {% for vehicle in my_vehicles %}
+    <tr>
+        <td class="col-xs-1">
+            <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target=".vehicle-modal-{{ vehicle.id }}">
+                {% bootstrap_icon "remove" %}
+              </button>
+            </form>
+            <div class="modal fade vehicle-modal-{{ vehicle.id }}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4>Fordon</h4>
+                        </div>
+                        <div class="modal-body">
+                            <h5>Ta bort fordonet "{{ vehicle.name }}"?</h5>
+                            <p>Alla mätarställningar som rapporterats för fordonet kommer också tas bort.</p>
+                            <form action="{% url 'delete_vehicle' vehicle.id %}" method="post" class="form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">
+                                    Avbryt
+                                </button>
+                                <button type="submit" class="btn btn-danger">
+                                    {% bootstrap_icon "remove" %} Ta bort
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td class="col-xs-6">
+            <a href="#" class="vehicle_name" id="vehiclename" datatype="text" data-pk="0" data-url="/api/vehicle/{{ vehicle.id }}" data-title="Fordonets namn">{{ vehicle.name }}</a>
+        </td>
+        <td class="col-xs-5">
+            {% for driver in vehicle.driver %}
+            <a href="#" class="driver_name" id="drivername" data-toggle="modal" data-target=".driver-modal-{{ driver.id }}">
+                {{ driver.user.username }}
+            </a>
+            <br>
+            <div class="modal fade driver-modal-{{ driver.id }}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4>Förare</h4>
+                        </div>
+                        <div class="modal-body">
+                            <h5>Ta bort {{ driver.user.username }} från fordonet "{{ vehicle.name }}"?</h5>
+                            <form action="{% url 'delete_driver' driver.id %}" method="post" class="form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">
+                                    Avbryt
+                                </button>
+                                <button type="submit" class="btn btn-danger">
+                                    {% bootstrap_icon "remove" %} Ta bort
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% endfor %}
+            <a href="#" class="newdriver_name" id="newdrivername-{{ vehicle.id }}" datatype="text" data-url="/api/driver/" data-pk="{{ vehicle.id }}" data-title="Förarens namn"></a>
+        </td>
+    </tr>
+    {% endfor %}
+{% endif %}
+    <tr>
+        <td class="col-xs-1">
+            &nbsp;
+        </td>
+        <td class="col-xs-6">
+            <a href="#" class="newvehicle_name" id="newvehiclename" datatype="text" data-url="/api/vehicle/" data-pk="0" data-title="Fordonets namn"></a>
+        </td>
+        <td class="col-xs-5">
+        </td>
+    </tr>
+</table>
+
+{% if drive_vehicles %}
+<h3>Fordon jag kan rapportera på:</h3>
+<table class="table table-striped">
+    <tr>
+        <td class="col-xs-1">&nbsp;</td>
+        <td class="col-xs-6"><b>Namn</b></td>
+        <td class="col-xs-5"><b>Ägare</b></td>
+    </tr>
+    {% for vehicle in drive_vehicles %}
+    <tr>
+        <td class="col-xs-1">
+            &nbsp;
+        </td>
+        <td class="col-xs-6">
+            {{ vehicle.name }}
+        </td>
+        <td class="col-xs-5">
+            {{ vehicle.owner.username }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}

@@ -6,14 +6,22 @@ import os
 
 class Vehicle(models.Model):
     name = models.CharField(max_length=64, blank=False, unique=True)
-    group = models.ForeignKey('auth.Group')
+    owner = models.ForeignKey('auth.User', null=True, default = None)
 
     def __str__(self):
         return self.name
 
+class Driver(models.Model):
+    user = models.ForeignKey('auth.User')
+    vehicle = models.ForeignKey('Vehicle')
+
+    def __str__(self):
+        return "%s-%s" % (self.user, self.vehicle)
+    class Meta:
+        unique_together = ('user', 'vehicle',)
+
 class OdometerSnap(models.Model):
-    uploadedby = models.ForeignKey('auth.User')
-    owner = models.ForeignKey('auth.Group')
+    driver = models.ForeignKey('auth.User')
     vehicle = models.ForeignKey('Vehicle')
     odometer = models.IntegerField()
     when = models.DateTimeField(default=timezone.now)
@@ -36,8 +44,7 @@ def raw_media_file_name(instance,filename):
     return os.path.join(f[0:1],f[1:2],f + ext.lower())
 
 class OdometerImage(models.Model):
-    uploadedby = models.ForeignKey('auth.User')
-    owner = models.ForeignKey('auth.Group')
+    driver = models.ForeignKey('auth.User')
     odometersnap = models.OneToOneField('OdometerSnap', unique=True)
     imagefile = models.FileField(upload_to=raw_media_file_name,blank=False)
 

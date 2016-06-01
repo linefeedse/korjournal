@@ -1,5 +1,5 @@
 from django.forms import ModelForm, Textarea, Form, ChoiceField, CharField
-from korjournal.models import OdometerSnap, OdometerImage
+from korjournal.models import OdometerSnap, OdometerImage, Vehicle, Driver
 from django.core.validators import RegexValidator
 
 class DeleteOdoSnapForm(ModelForm):
@@ -10,6 +10,16 @@ class DeleteOdoSnapForm(ModelForm):
 class DeleteOdoImageForm(ModelForm):
     class Meta:
         model = OdometerImage
+        fields = ['id']
+
+class DeleteVehicleForm(ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['id']
+
+class DeleteDriverForm(ModelForm):
+    class Meta:
+        model = Driver
         fields = ['id']
 
 class YearVehicleForm(Form):
