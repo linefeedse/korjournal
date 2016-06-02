@@ -20,13 +20,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Välj Fordon"
+            android:text="@string/select_vehicle"
             android:id="@+id/textView" />
 
         <Spinner
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/vehicleSpinner"/>
+            android:id="@+id/vehicleSpinner"
+            android:prompt="@string/select_vehicle"
+            android:spinnerMode="dialog" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -39,7 +41,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="4">
+            android:weightSum="4"
+            android:id="@+id/startEndRadioGroup">
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -135,7 +138,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Mätarställning i km (valfritt)"
+            android:text="Mätarställning i km (om ej bild)"
             android:id="@+id/textView4"
             android:layout_marginTop="10dp" />
 

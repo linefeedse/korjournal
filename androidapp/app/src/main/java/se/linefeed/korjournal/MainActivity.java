@@ -8,11 +8,9 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,8 +46,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +53,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -66,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private TextView statusText;
     private TextView locationText;
+    private TextView reasonText;
     private Button odometerSend;
     private ImageButton cameraButton;
     private EditText odometerText;
@@ -76,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements
     HashMap<String,String> myVehicles;
     private GoogleApiClient mGoogleApiClient;
     private final String TAG = "MainActivity";
-    private final String API_URL = "http://korjournal.linefeed.se/api";
     private Location mLocation = null;
     private String streetAddress;
     private ProgressBar sendProgress;
@@ -85,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements
     private ImageButton deletePicButton;
     private RadioButton radioIsStartButton, radioIsEndButton;
     private SharedPreferences sharedPreferences;
+    private KorjournalAPI mApi = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements
 
         statusText = (TextView) findViewById(R.id.volleyTextView);
         locationText = (TextView) findViewById(R.id.locationTextView);
+        reasonText = (TextView) findViewById(R.id.reasonText);
         odometerSend = (Button) findViewById(R.id.odometerSend);
         cameraButton = (ImageButton) findViewById(R.id.camerabutton);
         odometerText = (EditText) findViewById(R.id.odometerText);
@@ -110,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
         vehicleArr = new ArrayList<String>();
         vehicleSpinnerAdapter = new ArrayAdapter<String>(getApplicationContext(),
-                android.R.layout.simple_spinner_item,
+                android.R.layout.simple_spinner_dropdown_item,
                 vehicleArr);
         myVehicles = new HashMap<String,String>();
         vehicleSpinner.setAdapter(vehicleSpinnerAdapter);
@@ -120,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements
         radioIsStartButton = (RadioButton) findViewById(R.id.radio_isstart);
         radioIsEndButton = (RadioButton) findViewById(R.id.radio_isend);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mApi = new KorjournalAPI(this);
     }
 
     /**
@@ -243,13 +241,10 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void requestVehicles() {
-        final String url = API_URL + "/vehicle/";
-        final String username = sharedPreferences.getString("username_text","");
-        final String password = sharedPreferences.getString("code_text","");
 
         vehicleArr.clear();
         myVehicles.clear();
-        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.GET, url, null,
+        mApi.get_vehicles(
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -279,36 +274,15 @@ public class MainActivity extends AppCompatActivity implements
                         vehicleSpinnerAdapter.notifyDataSetChanged();
                     }
                 }
-        ) {
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
-            }
-
-        };
-        // Add the request to the RequestQueue.
-        requestQueue.add(req);
+        );
         vehicleSpinnerAdapter.notifyDataSetChanged();
     }
 
     private void sendOdometersnap() {
-        final String url = API_URL + "/odometersnap/";
-        final String username = sharedPreferences.getString("username_text","");
-        final String password = sharedPreferences.getString("code_text","");
 
         String vehicle = myVehicles.get(vehicleSpinner.getSelectedItem().toString());
-        if (requestQueue == null) {
-            requestQueue = Volley.newRequestQueue(this);
-        }
-
-        odometerSend.setText("...");
-        odometerSend.setClickable(false);
         String odometer = odometerText.getText().toString();
+        String reason = reasonText.getText().toString();
         try {
             if (Integer.valueOf(odometer) < 1) {
                 odometer = "0";
@@ -316,32 +290,17 @@ public class MainActivity extends AppCompatActivity implements
         } catch (NumberFormatException e) {
             odometer = "0";
         }
-        String body = "{ \"vehicle\": \"" + vehicle +
-                "\", \"odometer\": \"" + odometer + "\"";
-        if (mLocation != null) {
-            body = body.concat(String.format(Locale.US, ", \"poslat\": \"%f\", \"poslon\": \"%f\"",
-                mLocation.getLatitude(),
-                mLocation.getLongitude()));
-        }
-        if (streetAddress != null) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"where\": \"%s\"",
-                    streetAddress.replace("\"","''")));
-        }
-        if (radioIsStartButton.isChecked()) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"type\": \"%d\"",
-                    1));
-        }
-        if (radioIsEndButton.isChecked()) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"type\": \"%d\"",
-                    2));
-        }
-        body = body.concat(" }");
+        odometerSend.setText("...");
+        odometerSend.setClickable(false);
 
         sendProgress.setProgress(30);
-        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.POST, url, body,
+        mApi.send_odometersnap(vehicle,
+                odometer,
+                mLocation,
+                streetAddress,
+                reason,
+                radioIsStartButton.isChecked(),
+                radioIsEndButton.isChecked(),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -364,27 +323,11 @@ public class MainActivity extends AppCompatActivity implements
                         sendProgress.setProgress(0);
                     }
                 }
-        ) {
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
-            }
-
-        };
-        // Add the request to the RequestQueue.
-        requestQueue.add(req);
+            );
     }
 
     private void sendImageForOdo(final String linkedOdo) {
-        final String username = sharedPreferences.getString("username_text","");
-        final String password = sharedPreferences.getString("code_text","");
-        final String url = API_URL + "/odometerimage/";
-        MyMultipartRequest request = new MyMultipartRequest(url, new Response.Listener<NetworkResponse>() {
+        mApi.send_odoimage(odoImageFile,linkedOdo, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
                 String resultResponse = new String(response.data);
@@ -419,20 +362,10 @@ public class MainActivity extends AppCompatActivity implements
                     String result = new String(networkResponse.data);
                     try {
                         JSONObject response = new JSONObject(result);
-                        String message = null;
                         try {
-                            message = response.getString("imagefile");
+                            response.getString("imagefile");
                         } catch (JSONException e) {
-                            message = "no imagefile in response";
-                        }
-                        if (networkResponse.statusCode == 404) {
-                            errorMessage = "Resource not found";
-                        } else if (networkResponse.statusCode == 401) {
-                            errorMessage = message+" Please login again";
-                        } else if (networkResponse.statusCode == 400) {
-                            errorMessage = message+ " Check your inputs";
-                        } else if (networkResponse.statusCode == 500) {
-                            errorMessage = message+" Internal Server Error";
+                            e.printStackTrace();
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -441,36 +374,7 @@ public class MainActivity extends AppCompatActivity implements
                 Log.i("Error", errorMessage);
                 error.printStackTrace();
             }
-        }) {
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<>();
-                params.put("odometersnap", linkedOdo);
-                return params;
-            }
-
-            @Override
-            protected Map<String, DataPart> getByteData() {
-                Map<String, DataPart> params = new HashMap<>();
-                try {
-                    params.put("imagefile", new DataPart("odometerimage.jpg", odoImageFile, "image/jpeg"));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return params;
-            }
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
-            };
-        };
-
-        requestQueue.add(request);
+        });
     }
 
     @Override
