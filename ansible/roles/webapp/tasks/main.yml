@@ -7,6 +7,9 @@
     mode: 0744
   tags: [webapp]
 
+- name: media directory
+  file: name="{{ webapp_mediaroot }}" state=directory owner=root mode=0755
+
 - name: run webapp start script
   shell: /root/runapp.sh
   tags: [webapp]

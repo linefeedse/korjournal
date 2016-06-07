@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -69,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements
     private Spinner vehicleSpinner;
     private ArrayList<String> vehicleArr;
     private ArrayAdapter<String> vehicleSpinnerAdapter;
+    private String vehicleSelected = null;
     HashMap<String,String> myVehicles;
     private GoogleApiClient mGoogleApiClient;
     private final String TAG = "MainActivity";
@@ -107,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
         vehicleArr = new ArrayList<String>();
         vehicleSpinnerAdapter = new ArrayAdapter<String>(getApplicationContext(),
-                android.R.layout.simple_spinner_dropdown_item,
+                R.layout.my_spinner_item,
                 vehicleArr);
         myVehicles = new HashMap<String,String>();
         vehicleSpinner.setAdapter(vehicleSpinnerAdapter);
@@ -153,7 +156,9 @@ public class MainActivity extends AppCompatActivity implements
         odometerSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View parent) {
-                MainActivity.this.sendOdometersnap();
+                if (MainActivity.this.checkSelections()) {
+                    MainActivity.this.sendOdometersnap();
+                }
             }
         });
 
@@ -163,19 +168,25 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        setSelectedVehicle();
         mGoogleApiClient.connect();
     }
 
     @Override
     protected void onPause() {
+        if (vehicleSpinner.getSelectedItem() != null) {
+            vehicleSelected = vehicleSpinner.getSelectedItem().toString();
+        }
         super.onPause();
         if (mGoogleApiClient.isConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
         }
+
     }
 
     private void startCameraActivity() {
+        vehicleSelected = vehicleSpinner.getSelectedItem().toString();
         Intent intent = new Intent(this, CameraActivity.class);
         startActivity(intent);
     }
@@ -201,6 +212,45 @@ public class MainActivity extends AppCompatActivity implements
         };
         thread.start();
         locationText.setText("");
+    }
+
+    private boolean checkSelections() {
+        final int flash_color = 0xFFEE3030;
+        final int transparent = 0x00000000;
+        if (!radioIsStartButton.isChecked() && !radioIsEndButton.isChecked()) {
+           final RadioGroup startEndRadioGroup = (RadioGroup) findViewById(R.id.startEndRadioGroup);
+            startEndRadioGroup.setBackgroundColor(flash_color);
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    startEndRadioGroup.setBackgroundColor(transparent);
+                }
+            }, 300);
+            return false;
+        }
+        String odometer = odometerText.getText().toString();
+        try {
+            if (Integer.valueOf(odometer) < 1) {
+                odometer = "0";
+            }
+        } catch (NumberFormatException e) {
+            odometer = "0";
+        }
+        if (odometer.equals("0") && odoImageFile == null) {
+            odoImage.setBackgroundColor(flash_color);
+            odometerText.setBackgroundColor(flash_color);
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    odoImage.setBackgroundColor(transparent);
+                    odometerText.setBackgroundColor(transparent);
+                }
+            }, 300);
+            return false;
+        }
+        return true;
     }
 
     private void updateStreetAddress() {
@@ -256,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements
                                 vehicleArr.add(v.getString("name"));
                                 myVehicles.put(v.getString("name"),v.getString("url"));
                                 vehicleSpinnerAdapter.notifyDataSetChanged();
+                                setSelectedVehicle();
                             }
                         }
                         catch (JSONException e)
@@ -278,11 +329,48 @@ public class MainActivity extends AppCompatActivity implements
         vehicleSpinnerAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Set the selected vehicle according to logic:
+     * If we have a previous selection and pauses/rotates device, use that
+     * If we have no previous selection, and there is config for preselect, use that
+     * Else, we do nothing and it will just be the first item whatever that is.
+     */
+    private void setSelectedVehicle() {
+        if (vehicleSelected != null) {
+            boolean vehicleSelectedIsValid = false;
+            for (int i=0;i<vehicleArr.size();i++) {
+                if (vehicleSelected.equals(vehicleArr.get(i))) {
+                    vehicleSpinner.setSelection(i);
+                    vehicleSelectedIsValid = true;
+                    break;
+                }
+            }
+            if (!vehicleSelectedIsValid && vehicleArr.size() > 1) {
+                vehicleSelected = null;
+            }
+        } else {
+            String prefVehicleUrl = sharedPreferences.getString("vehicle_list","");
+            if (!prefVehicleUrl.equals("")) {
+                // loop over myvehicles and find the name corresponding to pref
+                for (String key : myVehicles.keySet()) {
+                    if (myVehicles.get(key).equals(prefVehicleUrl)) {
+                        for (int i=0;i<vehicleArr.size();i++) {
+                            if (key.equals(vehicleArr.get(i))) {
+                                vehicleSpinner.setSelection(i);
+                                vehicleSelected = key;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void sendOdometersnap() {
 
         String vehicle = myVehicles.get(vehicleSpinner.getSelectedItem().toString());
         String odometer = odometerText.getText().toString();
-        String reason = reasonText.getText().toString();
         try {
             if (Integer.valueOf(odometer) < 1) {
                 odometer = "0";
@@ -290,6 +378,8 @@ public class MainActivity extends AppCompatActivity implements
         } catch (NumberFormatException e) {
             odometer = "0";
         }
+        String reason = reasonText.getText().toString();
+
         odometerSend.setText("...");
         odometerSend.setClickable(false);
 
@@ -431,6 +521,13 @@ public class MainActivity extends AppCompatActivity implements
         File[] pictures = dir.listFiles();
         if (pictures.length < 1) {
             odoImageFile = null;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    odoImage.setImageBitmap(null);
+                }
+            });
+
             deletePicButton.setClickable(false);
             return;
         }

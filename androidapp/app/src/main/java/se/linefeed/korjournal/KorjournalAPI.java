@@ -109,6 +109,9 @@ public class KorjournalAPI {
 
     public void send_odoimage(final String odoImageFile,final String linkedOdo, Response.Listener<NetworkResponse> responseListener, Response.ErrorListener errorListener) {
         final String url = base_url + "/api/odometerimage/";
+        if (odoImageFile == null || linkedOdo == null) {
+            return;
+        }
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
@@ -174,7 +177,7 @@ public class KorjournalAPI {
                     ", \"where\": \"%s\"",
                     streetAddress.replace("\"","''")));
         }
-        if (reason != null) {
+        if (reason != null && !reason.equals("")) {
             body = body.concat(String.format(Locale.getDefault(),
                     ", \"why\": \"%s\"",
                     reason.replace("\"","''")));
