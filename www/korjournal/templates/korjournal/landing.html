@@ -335,7 +335,7 @@ img.emoji {
         </div>
     </div>
 <div class="vc_empty_space" style="height: 16px"><span class="vc_empty_space_inner"></span></div>
-<div class="wpb_column vc_column_container vc_col-sm-12"><div class="vc_column-inner "><div class="wpb_wrapper"></div></div></div></div></div></div>[/vc_column]<div class="qodef-process-holder columns-4"><div class="qodef-process-holder-inner"><div class="qodef-process-item">
+<div class="wpb_column vc_column_container vc_col-sm-12"><div class="vc_column-inner "><div class="wpb_wrapper"></div></div></div></div></div></div><div class="qodef-process-holder columns-4"><div class="qodef-process-holder-inner"><div class="qodef-process-item">
     <div class="qodef-process-item-icon-holder-wrapper">
         <div class="qodef-process-item-icon-holder">
             <span class="qodef-process-item-background-holder">
@@ -374,7 +374,7 @@ img.emoji {
             <h5>Lagring</h5>
         </div>
         <div class="qodef-process-item-text-holder">
-            <p>Informationen sparas i på ditt konto hos oss </p>
+            <p>Informationen sparas på ditt konto hos oss</p>
         </div>
     </div>
 </div><div class="qodef-process-item">
@@ -415,7 +415,7 @@ img.emoji {
             <h5>Redovisning</h5>
         </div>
         <div class="qodef-process-item-text-holder">
-            <p>När som helst kan du ta ut en rapport över alla körningar</p>
+            <p>När som helst kan du ta ut en rapport över årets alla körningar</p>
         </div>
     </div>
 </div></div></div></div></div><div class="vc_row wpb_row vc_row-fluid qodef-section vc_custom_1446816513166 qodef-content-aligment-center" style=""><div class="clearfix qodef-full-section-inner"><div class="wpb_column vc_column_container vc_col-sm-12"><div class="vc_column-inner vc_custom_1445413182400"><div class="wpb_wrapper">
@@ -435,7 +435,19 @@ img.emoji {
     </div>
     <div class="wpb_text_column wpb_content_element  vc_custom_1465288691832">
         <div class="wpb_wrapper">
-            <h4><span style="color: #000000;">Fyll telefonnumret till din smartphone här för att skicka en länk till appen: (form)</span></h4>
+            <h4><span style="color: #000000;">Fyll telefonnumret till din smartphone här för att skicka en länk till appen: </span></h4>
+                {% csrf_token %}
+                <form action="/applink/" method="post" class="form-horizontal" role="form">
+                <div class="form-group ">
+                    <div class="col-sm-2 ">
+                        <label for="id_phone" class="col-sm-2 control-label">+46</label>
+                    </div>
+                    <div class="col-sm-10 ">
+                        <input id="id_phone" name="phone" type="text" />
+                        <button type="submit" class="btn btn-default">Skicka</button>
+                    </div>
+                </div>
+                </form>
             <h4><span style="color: #000000;">Du kan också gå till denna sida för att registrera dig via datorn: (länk)</span></h4>
         </div>
     </div>
