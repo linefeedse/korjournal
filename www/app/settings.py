@@ -25,7 +25,7 @@ SECRET_KEY = 't9h$(^dvq(38s8-hkf2y_*5dg4d48(6euz*(=n9a%qoy0^@s2p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.50.4','.linefeed.se']
 
 
 # Application definition

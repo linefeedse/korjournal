@@ -7,6 +7,7 @@ from django.contrib.auth.hashers import make_password
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import timedelta
+from dateutil import tz, parser
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import api_view, permission_classes
 from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
@@ -202,6 +203,16 @@ class OdometerSnapViewSet(viewsets.ModelViewSet):
 
     def perform_create(self,serializer):
         serializer.save(driver=self.request.user)
+
+    def perform_update(self,serializer):
+        instance = self.get_object()
+        if "when" in self.request.data:
+            tzsweden = tz.gettz('Europe/Stockholm')
+            tzutc = tz.gettz('UTC')
+            when_tzsweden = parser.parse(self.request.data['when']).replace(tzinfo=tzsweden)
+            serializer.save(when=when_tzsweden.astimezone(tzutc))
+        else:
+            serializer.save()
 
 class OdometerImageViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerImageSerializer

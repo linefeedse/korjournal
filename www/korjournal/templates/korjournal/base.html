@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 {% load bootstrap3 %}
 {% bootstrap_css %}
-<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 {% bootstrap_javascript %}
 {% block extra_javascript %}
 {% endblock %}
 {% block bootstrap3_content %}
-<div class="container">
-    <nav class="navbar navbar-tabs">
-            <ul class="nav nav-tabs">
-                <li class="nav-item"><a class="nav-link" href="/report/">Årsrapport</a></li>
-                <li class="nav-item"><a class="nav-link" href="/editor/">Mätarställningar</a></li>
-                <li class="nav-item"><a class="nav-link" href="/vehicles/">Mina fordon</a></li>
-                <li class="nav-item navbar-right"><a class="nav-link" href="/logout/?next=/">Logga ut {{ username }}</a></li>
-            </ul>
-    </nav>
- 
-{% block content %}
-{% endblock %}
-</div>
+	<div class="container">
+	    <nav class="navbar navbar-tabs">
+	            <ul class="nav nav-tabs">
+	                <li class="nav-item"><a class="nav-link" href="/report/">Årsrapport</a></li>
+	                <li class="nav-item"><a class="nav-link" href="/editor/">Mätarställningar</a></li>
+	                <li class="nav-item"><a class="nav-link" href="/vehicles/">Mina fordon</a></li>
+	                <li class="nav-item navbar-right"><a class="nav-link" href="/logout/?next=/">Logga ut {{ username }}</a></li>
+	            </ul>
+	    </nav>
+	{% load tz %}
+	{% timezone "Europe/Stockholm" %}
+		{% block content %}
+		{% endblock %}
+	{% endtimezone %}
+	</div>
 {% endblock %}

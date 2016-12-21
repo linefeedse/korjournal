@@ -2,7 +2,7 @@ FROM ubuntu:16.04
 MAINTAINER Tor-Ake Fransson <tor-ake.fransson@linefeed.se>
 
 # the echo here will effectively decide machine patch level. Set to todays date
-RUN apt-get update && echo 2016-05-06
+RUN apt-get update && echo 2016-12-21
 RUN apt-get -y upgrade
 RUN apt-get install -y software-properties-common rsync
 
@@ -29,7 +29,7 @@ RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 
 # Pip
 #
-RUN apt-get install -y python3-dev python3-setuptools python3-pip
+RUN apt-get install -y python3-dev python3-setuptools python3-pip python3-dateutil
 
 # Django
 #
