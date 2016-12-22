@@ -1,0 +1,19 @@
+div.editor-delete-form-wrapper {
+	padding: 5px 5px 5px 12px;
+    border-left: 1px dashed;
+}
+
+div.editor-odometer-image-wrapper {
+	max-width: 160px;
+}
+
+.editor-vehicle-name-wrapper {
+	border: 1px solid lightgray;
+	border-radius: 3px;
+	text-align: center;
+}
+
+tr.editor-table-header {
+	font-size: xx-small;
+	font-weight: bold;
+}

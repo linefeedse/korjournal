@@ -18,17 +18,18 @@
         ssh_key_ids: [ 1898821 ]
         wait: yes
       register: digocn
-#    - debug:
-#        var=digocn
+      tags: [inventory]
+    - debug:
+        var=digocn
       tags: [inventory]
 
     - name: Add all instances to inventory
-      local_action: add_host name={{ digocn.droplet.networks.v4[1].ip_address }} groupname=digocn
+      local_action: add_host name={{ digocn.droplet.networks.v4[0].ip_address }} groupname=digocn
       when: droplet_state == "present"
       tags: [inventory]
 
     - name: Wait for SSH to come up on all instances
-      local_action: wait_for host={{ digocn.droplet.networks.v4[1].ip_address }} port=22 delay=3 timeout=420 state=started
+      local_action: wait_for host={{ digocn.droplet.networks.v4[0].ip_address }} port=22 delay=3 timeout=420 state=started
       when: droplet_state == "present"
 
 - name: Bootstrap instances

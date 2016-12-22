@@ -6,35 +6,72 @@
 {% block extra_javascript %}
 <script src="/korjournal/js/moment.min.js"></script>
 <link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
+<link href="/korjournal/css/editor.css" rel="stylesheet">
 <script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
 <script src="/inputs-ext/typeaheadjs/lib/typeahead.js"></script>
 <script src="/inputs-ext/typeaheadjs/typeaheadjs.js"></script>
 <script src="/korjournal/js/editor.js?6"></script>
 <meta name="why_typeahead" content='[{% for reason in odo_unique_reason %}"{{ reason.why }}",{% endfor %}"Okänt"]'>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 {% endblock %}
 {% block content %}
 <h2>Mätarställningar</h2>
 
 {% if odo_snap_list %}
 <table class="table table-striped">
-    <tr>
-        <td><b>Km</b></td>
-        <td><b>Fordon</b></td>
-        <td><b>Datum/Tid</b></td>
-        <td><b>Start/Mål</b></td>
-        <td><b>Adress</b></td>
-        <td><b>Syfte</b></td>
-        <td><b>Ta bort</b></td>
+    <tr class="editor-table-header">
+        <td class="col-xs-11 col-sm-11 col-md-11">
+        <div class="col-xs-4 col-sm-2 col-md-1">Start/Mål</div>
+        <div class="col-xs-5 col-sm-4 col-md-1 editor-vehicle-name-wrapper">Fordon</div>
+        <div class="col-xs-12 col-sm-6 col-md-2">Km</div>
+        <div class="col-xs-12 col-sm-12 col-md-2">Datum/Tid</div>
+        <div class="col-xs-12 col-sm-12 col-md-3">Adress</div>
+        <div class="col-xs-12 col-sm-12 col-md-3">Syfte</div>
+        </td>
+        <td class="col-xs-1 col-sm-1" style="vertical-align: middle">
+            <div class="editor-delete-form-wrapper" style="margin-left: 2px;">Ta bort</div>
+        </td>
     </tr>
     {% for odo_snap in odo_snap_list %}
     <tr>
-        <td class="col-xs-2">
+        <td class="col-xs-11 col-sm-11">
+            <p class="col-xs-4 col-sm-2 col-md-1">
+            {% if odo_snap.editable %}
+            <a href="#" class="type" id="startfin" data-type="select" data-pk="0" data-source="[{value: 1, text: 'Start'},{value: 2, text: 'Mål'}]" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Start eller Slut">
+                {% if odo_snap.type == "1" %}
+                  {% bootstrap_icon "play" %}
+                {% else %}
+                  {% bootstrap_icon "stop" %}
+                {% endif %}
+            </a>
+            {% else %}
+                <a href="#" class="btn" id="startfin" data-toggle="modal" data-target=".modal-read-only">
+                {% if odo_snap.type == "1" %}
+                  {% bootstrap_icon "play" %}
+                {% else %}
+                  {% bootstrap_icon "stop" %}
+                {% endif %}
+                </a>
+            {% endif %}
+            </p>
+            <p class="col-xs-5 col-sm-4 col-md-1 editor-vehicle-name-wrapper">
+            {% if odo_snap.editable %}
+                <a href="#" class="vehicle" id="vehiclename" data-type="select" data-pk="0" data-value="{{ odo_snap.vehicle.id }}" data-source=
+                    "[{% for vehicle in my_vehicles %}{value: {{ vehicle.id }}, text: '{{ vehicle.name }}'},{% endfor %}]"
+                    data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Fordon">{{ odo_snap.vehicle }}</a>
+            {% else %}
+                <a href="#" class="btn" id="vehiclename" data-toggle="modal" data-target=".modal-read-only">{{ odo_snap.vehicle }}</a>
+            {% endif %}
+            </p>
+            <div class="col-xs-12 col-sm-6 col-md-2">
             {% if odo_snap.editable %}
                 <a href="#" class="kilometer" id="odometer" data-type="text" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Mätarställning"><b>{{ odo_snap.odometer }}</b></a>
                 {% if odo_snap.odometerimage %}
-                <button type="button" class="btn" data-toggle="modal" data-target=".odoimage-modal-{{ odo_snap.odometerimage.id }}">
-                    <img src="/media/{{ odo_snap.odometerimage.imagefile }}" alt="Radera bild" width="100%">
-                </button>
+                <div class="editor-odometer-image-wrapper">
+                    <button type="button" class="btn" data-toggle="modal" data-target=".odoimage-modal-{{ odo_snap.odometerimage.id }}">
+                    <img src="/media/{{ odo_snap.odometerimage.imagefile }}" alt="Radera bild" width=100%>
+                    </button>
+                </div>
                 <div class="modal fade odoimage-modal-{{ odo_snap.odometerimage.id }}" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
@@ -67,43 +104,15 @@
                     <img src="/media/{{ odo_snap.odometerimage.imagefile }}" alt="Radera bild" width="100%">
                 {% endif %}
             {% endif %}
-        </td>
-        <td class="col-xs-1">
-            {% if odo_snap.editable %}
-                <a href="#" class="vehicle" id="vehiclename" data-type="select" data-pk="0" data-value="{{ odo_snap.vehicle.id }}" data-source=
-                    "[{% for vehicle in my_vehicles %}{value: {{ vehicle.id }}, text: '{{ vehicle.name }}'},{% endfor %}]"
-                    data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Fordon">{{ odo_snap.vehicle }}</a>
-            {% else %}
-                <a href="#" class="btn" id="vehiclename" data-toggle="modal" data-target=".modal-read-only">{{ odo_snap.vehicle }}</a>
-            {% endif %}
-        </td>
-        <td class="col-xs-1">
+        </div>
+        <p class="col-xs-12 col-sm-12 col-md-2">
             {% if odo_snap.editable %}
                 <a href="#" class="datetime" id="when" data-type="combodate" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Datum/tid">{{ odo_snap.when|date:"Y-m-d" }} {{ odo_snap.when|time:"H:i" }}</a>
             {% else %}
                 <a href="#" class="btn" id="when" data-toggle="modal" data-target=".modal-read-only">{{ odo_snap.when|date:"Y-m-d" }} {{ odo_snap.when|time:"H:i" }}</a>
             {% endif %}
-        </td>
-        <td class="col-xs-1">
-            {% if odo_snap.editable %}
-            <a href="#" class="type" id="startfin" data-type="select" data-pk="0" data-source="[{value: 1, text: 'Start'},{value: 2, text: 'Mål'}]" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Start eller Slut">
-                {% if odo_snap.type == "1" %}
-                  {% bootstrap_icon "play" %}
-                {% else %}
-                  {% bootstrap_icon "stop" %}
-                {% endif %}
-            </a>
-            {% else %}
-                <a href="#" class="btn" id="startfin" data-toggle="modal" data-target=".modal-read-only">
-                {% if odo_snap.type == "1" %}
-                  {% bootstrap_icon "play" %}
-                {% else %}
-                  {% bootstrap_icon "stop" %}
-                {% endif %}
-                </a>
-            {% endif %}
-        </td>
-        <td class="col-xs-3">
+        </p>
+        <p class="col-xs-12 col-sm-12 col-md-3">
             {% if odo_snap.editable %}
                 {% if odo_snap.where and odo_snap.where != "" %}
                     <a href="#" class="streetaddress" id="where" data-type="text" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Gatuadress">{{ odo_snap.where }}</a>
@@ -115,8 +124,8 @@
                     {{ odo_snap.where }}
                 </a>
             {% endif %}
-        </td>
-        <td class="col-xs-3">
+        </p>
+        <p class="col-xs-12 col-sm-12 col-md-3">
             {% if odo_snap.type == "2" %}
                 {% if odo_snap.editable %}
                 <a href="#" class="reason" id="why" data-type="typeaheadjs" data-pk="0" data-url="/api/odometersnap/{{ odo_snap.id }}/" data-title="Ärende/kund">
@@ -128,23 +137,24 @@
                 </a>
                 {% endif %}
             {% endif %}
+        </p>
         </td>
-        <td class="col-xs-1">
+        <td class="col-xs-1 col-sm-1" style="vertical-align: middle">
+        <div class="editor-delete-form-wrapper">
             {% if odo_snap.editable %}
             <form action="{% url 'delete_odo_snap' odo_snap.id %}" method="post" class="form">
               {% csrf_token %}
               {% bootstrap_form form layout='inline' %}
-              {% buttons %}
               <button type="submit" class="btn btn-danger">
                 {% bootstrap_icon "remove" %}
               </button>
-              {% endbuttons %}
             </form>
             {% else %}
                 <button type="button" class="btn btn-default" data-toggle="tooltip" title="Bara den som äger fordonet och den som laddat upp en mätarställning får radera.">
                 {% bootstrap_icon "ban-circle" %}
                 </button>
             {% endif %}
+        </div>
         </td>
     </tr>
     {% endfor %}
