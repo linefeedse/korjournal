@@ -17,3 +17,9 @@ tr.editor-table-header {
 	font-size: xx-small;
 	font-weight: bold;
 }
+
+a.editor-link-disabled {
+	pointer-events: none;
+	cursor: default;
+	opacity: 0.7;
+}

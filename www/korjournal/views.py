@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound
 from django.core.urlresolvers import reverse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
@@ -39,12 +40,23 @@ def landing(request):
 
 @login_required(login_url='/login')
 def editor(request):
-    odo_snap_list = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user)).order_by('-when')
+    odo_snap_all = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user)).order_by('-when')
+    paginator = Paginator(odo_snap_all, 10)
+
+    page = request.GET.get('page')
+    try:
+        odo_snap_list = paginator.page(page)
+    except PageNotAnInteger:
+        odo_snap_list = paginator.page(1)
+    except EmptyPage:
+        odo_snap_list = paginator.page(paginator.num_pages)
+
     for odo_snap in odo_snap_list:
         if (odo_snap.vehicle.owner == request.user or odo_snap.driver == request.user):
             odo_snap.editable = True
         else:
             odo_snap.editable = False
+
     my_vehicles = Vehicle.objects.filter(Q(owner=request.user)|Q(driver__user=request.user))
     last_month = timezone.now() - timedelta(days=31)
     odo_unique_reason = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user),when__gt=last_month).values('why').distinct().order_by('why')
@@ -57,7 +69,8 @@ def delete_odo_snap(request,odo_snap_id):
     form = DeleteOdoSnapForm(request.POST)
     if form.is_valid():
         odo_snap.delete()
-        return HttpResponseRedirect(reverse('editor'))
+        paginator_page = request.POST.get('paginator_page')
+        return HttpResponseRedirect(reverse('editor') + '?page=' + paginator_page)
 
     return editor(request)
 
@@ -239,7 +252,8 @@ def delete_odo_image(request,odo_image_id):
     form = DeleteOdoImageForm(request.POST)
     if form.is_valid():
         odo_image.delete()
-        return HttpResponseRedirect(reverse('editor'))
+        paginator_page = request.POST.get('paginator_page')
+        return HttpResponseRedirect(reverse('editor') + '?page=' + paginator_page)
 
     return editor(request)
 

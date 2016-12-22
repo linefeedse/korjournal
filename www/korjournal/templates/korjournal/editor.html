@@ -18,6 +18,19 @@
 <h2>Mätarställningar</h2>
 
 {% if odo_snap_list %}
+<ul class="pagination pagination-sm">
+    {% if odo_snap_list.has_previous %}
+        <li><a href="?page={{ odo_snap_list.previous_page_number }}">nyare</a></li>
+    {% else %}
+            <li><a href="#" class="editor-link-disabled">nyare</a></li>
+    {% endif %}
+        <li><a href="#" class="editor-link-disabled">sidan {{ odo_snap_list.number }} av {{ odo_snap_list.paginator.num_pages }}</a></li>
+    {% if odo_snap_list.has_next %}
+        <li><a href="?page={{ odo_snap_list.next_page_number }}">äldre</a></li>
+    {% else %}
+        <li><a href="#" class="editor-link-disabled">äldre</a></li>
+    {% endif %}
+</ul>
 <table class="table table-striped">
     <tr class="editor-table-header">
         <td class="col-xs-11 col-sm-11 col-md-11">
@@ -91,6 +104,7 @@
                                     <button type="submit" class="btn btn-danger">
                                         {% bootstrap_icon "remove" %} Radera?
                                     </button>
+                                    <input type="hidden" name="paginator_page" value="{{ odo_snap_list.number }}">
                                 </form>
                             </div>
                         </div>
@@ -143,11 +157,12 @@
         <div class="editor-delete-form-wrapper">
             {% if odo_snap.editable %}
             <form action="{% url 'delete_odo_snap' odo_snap.id %}" method="post" class="form">
-              {% csrf_token %}
-              {% bootstrap_form form layout='inline' %}
-              <button type="submit" class="btn btn-danger">
-                {% bootstrap_icon "remove" %}
-              </button>
+                {% csrf_token %}
+                <input type="hidden" name="paginator_page" value="{{ odo_snap_list.number }}">
+                {% bootstrap_form form layout='inline' %}
+                <button type="submit" class="btn btn-danger">
+                    {% bootstrap_icon "remove" %}
+                </button>
             </form>
             {% else %}
                 <button type="button" class="btn btn-default" data-toggle="tooltip" title="Bara den som äger fordonet och den som laddat upp en mätarställning får radera.">
@@ -177,6 +192,19 @@
         </div>
     </div>
 </div>
+<ul class="pagination pagination-sm">
+    {% if odo_snap_list.has_previous %}
+        <li><a href="?page={{ odo_snap_list.previous_page_number }}">nyare</a></li>
+    {% else %}
+            <li><a href="#" class="editor-link-disabled">nyare</a></li>
+    {% endif %}
+        <li><a href="#" class="editor-link-disabled">sidan {{ odo_snap_list.number }} av {{ odo_snap_list.paginator.num_pages }}</a></li>
+    {% if odo_snap_list.has_next %}
+        <li><a href="?page={{ odo_snap_list.next_page_number }}">äldre</a></li>
+    {% else %}
+        <li><a href="#" class="editor-link-disabled">äldre</a></li>
+    {% endif %}
+</ul>
 {% else %}
 <p>
     Inga mätarställningar ännu
