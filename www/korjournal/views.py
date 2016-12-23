@@ -41,7 +41,7 @@ def landing(request):
 @login_required(login_url='/login')
 def editor(request):
     odo_snap_all = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user)).order_by('-when')
-    paginator = Paginator(odo_snap_all, 10)
+    paginator = Paginator(odo_snap_all, 50)
 
     page = request.GET.get('page')
     try:
