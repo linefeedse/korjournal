@@ -17,8 +17,11 @@
         {% bootstrap_field year_vehicle_form.year size="small" layout="horizontal" horizontal_label_class="col-md-1 col-xs-1" horizontal_field_class="col-md-2 col-xs-2" %}
         {% bootstrap_field year_vehicle_form.vehicle size="small" layout="horizontal" horizontal_label_class="col-md-1 col-xs-1" horizontal_field_class="col-md-2 col-xs-2" %}
         {% buttons %}
-            <button type="submit" class="btn btn-success">
-              {% bootstrap_icon "ok" %}
+            <button type="submit" class="btn btn-success" name="show" value="html">
+                Visa
+            </button>
+            <button type="submit" class="btn btn-warning" name="export" value="csv">
+                Exportera
             </button>
         {% endbuttons %}
     </form>
