@@ -1,7 +1,7 @@
 $(document).ready(function() {
     $('[data-toggle="tooltip"]').tooltip();
     //toggle `popup` / `inline` mode
-    $.fn.editable.defaults.mode = 'inline';
+    $.fn.editable.defaults.mode = 'popup';
     $.fn.editable.defaults.emptytext = 'Inget';
 
     $('.kilometer').each(function() {
