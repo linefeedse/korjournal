@@ -28,10 +28,8 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.NoConnectionError;
-import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.TimeoutError;
@@ -56,6 +54,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import se.linefeed.korjournal.api.KorjournalAPI;
+import se.linefeed.korjournal.api.KorjournalAPIDone;
+import se.linefeed.korjournal.models.OdometerSnap;
+
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -70,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements
     private RequestQueue requestQueue = null;
     private Spinner vehicleSpinner;
     private ArrayList<String> vehicleArr;
+    private ArrayList<OdometerSnap> odoSnapArr;
     private ArrayAdapter<String> vehicleSpinnerAdapter;
     private String vehicleSelected = null;
     HashMap<String,String> myVehicles;
@@ -109,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements
         odometerText.setSelectAllOnFocus(true);
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
         vehicleArr = new ArrayList<String>();
+        odoSnapArr = new ArrayList<OdometerSnap>();
         vehicleSpinnerAdapter = new ArrayAdapter<String>(getApplicationContext(),
                 R.layout.my_spinner_item,
                 vehicleArr);
@@ -137,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements
             requestQueue = Volley.newRequestQueue(this);
         }
         requestVehicles();
+        requestOdosnaps();
         Thread thread = new Thread() {
             @Override
             public void run() {
@@ -329,6 +334,30 @@ public class MainActivity extends AppCompatActivity implements
         vehicleSpinnerAdapter.notifyDataSetChanged();
     }
 
+    private void requestOdosnaps() {
+
+        odoSnapArr.clear();
+        mApi.get_odosnaps(odoSnapArr,
+                new KorjournalAPIDone() {
+                    @Override
+                    public void done() {
+
+                    }
+                    @Override
+                    public void error(String error) {
+                        onRequestResponse(error);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        vehicleArr.add("Fel: inga fordon!");
+                        onRequestResponse("Fel: inga fordon!");
+                        vehicleSpinnerAdapter.notifyDataSetChanged();
+                    }
+                }
+        );
+    }
     /**
      * Set the selected vehicle according to logic:
      * If we have a previous selection and pauses/rotates device, use that
@@ -519,7 +548,7 @@ public class MainActivity extends AppCompatActivity implements
     private void loadLastOdoImage() {
         File dir = new File(this.getExternalFilesDir(null),"korjournal");
         File[] pictures = dir.listFiles();
-        if (pictures.length < 1) {
+        if (pictures == null || pictures.length < 1) {
             odoImageFile = null;
             runOnUiThread(new Runnable() {
                 @Override

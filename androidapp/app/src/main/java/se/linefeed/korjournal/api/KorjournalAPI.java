@@ -1,10 +1,11 @@
-package se.linefeed.korjournal;
+package se.linefeed.korjournal.api;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.util.Base64;
+import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
@@ -13,18 +14,24 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import se.linefeed.korjournal.MyJsonStringRequest;
+import se.linefeed.korjournal.MyMultipartRequest;
+import se.linefeed.korjournal.models.OdometerSnap;
 
 
 /* All code talking to the API should be moved here so that only response processing is left
    in the calling classes
  */
-
 
 public class KorjournalAPI {
     private RequestQueue mRequestQueue = null;
@@ -32,6 +39,14 @@ public class KorjournalAPI {
     private String password;
     private Context mContext;
     private final String base_url = "http://korjournal.linefeed.se";
+
+    private HashMap<String,String> getAuthorizationHeaders() {
+        HashMap<String, String> headers = new HashMap<String, String>();
+        String creds = String.format("%s:%s", username, password);
+        String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
+        headers.put("Authorization", auth);
+        return headers;
+    }
 
     public KorjournalAPI(Context context) {
         mContext = context;
@@ -57,11 +72,7 @@ public class KorjournalAPI {
         ) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
+                return getAuthorizationHeaders();
             }
 
         };
@@ -87,11 +98,7 @@ public class KorjournalAPI {
         ) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
+                return getAuthorizationHeaders();
             }
 
         };
@@ -136,11 +143,7 @@ public class KorjournalAPI {
 
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
+                return getAuthorizationHeaders();
             };
         };
 
@@ -199,13 +202,51 @@ public class KorjournalAPI {
         ) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-                String creds = String.format("%s:%s",username,password);
-                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                headers.put("Authorization", auth);
-                return headers;
+                return getAuthorizationHeaders();
             }
 
+        };
+        // Add the request to the RequestQueue.
+        mRequestQueue.add(req);
+    }
+
+    /**
+     * Ask for odometersnaps I am allowed to see
+     * @param errorListener
+     */
+    public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, final KorjournalAPIDone done, Response.ErrorListener errorListener) {
+        final String api_url = base_url + "/api/odometersnap/?days=60";
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(mContext);
+        }
+        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.GET, api_url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray odoSnaps = response.getJSONArray("results");
+                            for (int i=0; i < odoSnaps.length(); i++) {
+                                JSONObject o = odoSnaps.getJSONObject(i);
+                                OdometerSnap oSnap = new OdometerSnap();
+                                odoSnapArr.add(oSnap.loadFromJSON(o));
+                                if (oSnap.getReason() != null) {
+                                    Log.i("API", "Reason loaded: " + oSnap.getReason());
+                                }
+                            }
+                        }
+                        catch (JSONException e)
+                        {
+                            done.error("get_odosnaps JSON-fel!" + e.getMessage());
+                        }
+                        done.done();
+                    }
+                },
+                errorListener
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                return getAuthorizationHeaders();
+            }
         };
         // Add the request to the RequestQueue.
         mRequestQueue.add(req);
