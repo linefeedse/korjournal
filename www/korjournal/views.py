@@ -127,29 +127,6 @@ class DriverViewSet(viewsets.ModelViewSet):
             return HttpResponseNotFound('Föraren finns redan på fordonet')
         return HttpResponse('{"id": %d}' % driver.id)
 
- 
-class OdometerSnapViewSet(viewsets.ModelViewSet):
-    serializer_class = OdometerSnapSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
-    filter_backends = (filters.OrderingFilter,)
-    ordering_fields = '__all__'
-    
-    def get_queryset(self):
-        return OdometerSnap.objects.filter(Q(vehicle__owner=self.request.user)|Q(driver=self.request.user))
-
-    def perform_create(self,serializer):
-        serializer.save(driver=self.request.user)
-
-    def perform_update(self,serializer):
-        instance = self.get_object()
-        if "when" in self.request.data:
-            tzsweden = tz.gettz('Europe/Stockholm')
-            tzutc = tz.gettz('UTC')
-            when_tzsweden = parser.parse(self.request.data['when']).replace(tzinfo=tzsweden)
-            serializer.save(when=when_tzsweden.astimezone(tzutc))
-        else:
-            serializer.save()
-
 class OdometerImageViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerImageSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
