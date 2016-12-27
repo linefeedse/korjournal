@@ -55,16 +55,18 @@ public class OdometerSnap {
      * @throws JSONException
      */
     public OdometerSnap loadFromJSON(JSONObject jsonObject) throws JSONException {
-       /* vehicle = jsonObject.getString("name");
-        odometer = jsonObject.getInt("odometer"); */
+       /* These members are not required right now
+        vehicle = jsonObject.getString("name");
+        odometer = jsonObject.getInt("odometer");
+        streetAddress = jsonObject.getString("where");
+        when = jsonObject.getString("when");
+        isStart = jsonObject.getString("type").equals("1");
+        isEnd = jsonObject.getString("type").equals("2");
+        */
         double poslat = jsonObject.getLong("poslat");
         double poslon = jsonObject.getLong("poslon");
         position = new Position(poslat, poslon);
-//        streetAddress = jsonObject.getString("where");
         reason = jsonObject.getString("why");
-  //      when = jsonObject.getString("when");
-    //    isStart = jsonObject.getString("type").equals("1");
-      //  isEnd = jsonObject.getString("type").equals("2");
         return this;
     }
 

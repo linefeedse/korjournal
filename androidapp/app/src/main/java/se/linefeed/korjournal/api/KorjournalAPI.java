@@ -27,6 +27,7 @@ import java.util.Map;
 import se.linefeed.korjournal.MyJsonStringRequest;
 import se.linefeed.korjournal.MyMultipartRequest;
 import se.linefeed.korjournal.models.OdometerSnap;
+import se.linefeed.korjournal.models.Vehicle;
 
 
 /* All code talking to the API should be moved here so that only response processing is left
@@ -57,17 +58,32 @@ public class KorjournalAPI {
 
     /**
      * Ask for a list of vehicles i am permitted to see
-     * @param responseListener
+     * @param myVehicles
+     * @param done
      * @param errorListener
      */
-
-    public void get_vehicles(Response.Listener<JSONObject> responseListener, Response.ErrorListener errorListener) {
+    public void get_vehicles(final HashMap<String,Vehicle> myVehicles, final KorjournalAPIInterface done, Response.ErrorListener errorListener) {
         final String api_url = base_url + "/api/vehicle/";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
         MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.GET, api_url, null,
-                responseListener,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray results = response.getJSONArray("results");
+                            for (int i = 0; i < results.length(); i++) {
+                                JSONObject v = results.getJSONObject(i);
+                                Vehicle vehicle = new Vehicle(v.getString("name"), v.getString("url"));
+                                myVehicles.put(vehicle.getName(), vehicle);
+                            }
+                        } catch (JSONException e) {
+                            done.error("JSON-fel!");
+                        }
+                        done.done();
+                    }
+                },
                 errorListener
         ) {
             @Override
@@ -214,7 +230,7 @@ public class KorjournalAPI {
      * Ask for odometersnaps I am allowed to see
      * @param errorListener
      */
-    public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, final KorjournalAPIDone done, Response.ErrorListener errorListener) {
+    public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, final KorjournalAPIInterface done, Response.ErrorListener errorListener) {
         final String api_url = base_url + "/api/odometersnap/?days=60";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);

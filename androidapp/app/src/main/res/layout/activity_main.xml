@@ -38,6 +38,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="Ärende (valfritt)"
+            android:id="@+id/textView6"
+            android:layout_marginTop="10dp" />
+
+        <AutoCompleteTextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/reasonText" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="Är detta resans start eller mål?"
             android:id="@+id/textView2" />
 
@@ -206,21 +219,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Medium Text"
+            android:text="väntar..."
             android:id="@+id/locationTextView" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Ärende (valfritt)"
-            android:id="@+id/textView6"
-            android:layout_marginTop="10dp" />
-
-        <EditText
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/reasonText" />
 
         <ProgressBar
             style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"

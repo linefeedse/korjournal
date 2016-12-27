@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -56,7 +57,9 @@ import java.util.Locale;
 
 import se.linefeed.korjournal.api.KorjournalAPI;
 import se.linefeed.korjournal.api.KorjournalAPIDone;
+import se.linefeed.korjournal.api.KorjournalAPIInterface;
 import se.linefeed.korjournal.models.OdometerSnap;
+import se.linefeed.korjournal.models.Vehicle;
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private TextView statusText;
     private TextView locationText;
-    private TextView reasonText;
+    private AutoCompleteTextView reasonText;
     private Button odometerSend;
     private ImageButton cameraButton;
     private EditText odometerText;
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements
     private ArrayList<OdometerSnap> odoSnapArr;
     private ArrayAdapter<String> vehicleSpinnerAdapter;
     private String vehicleSelected = null;
-    HashMap<String,String> myVehicles;
+    private HashMap<String, Vehicle> myVehicles;
     private GoogleApiClient mGoogleApiClient;
     private final String TAG = "MainActivity";
     private Location mLocation = null;
@@ -87,6 +90,8 @@ public class MainActivity extends AppCompatActivity implements
     private RadioButton radioIsStartButton, radioIsEndButton;
     private SharedPreferences sharedPreferences;
     private KorjournalAPI mApi = null;
+    private ArrayList<String> reasons;
+    private ArrayAdapter<String> reasonSuggestionAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements
 
         statusText = (TextView) findViewById(R.id.volleyTextView);
         locationText = (TextView) findViewById(R.id.locationTextView);
-        reasonText = (TextView) findViewById(R.id.reasonText);
+        reasonText = (AutoCompleteTextView) findViewById(R.id.reasonText);
         odometerSend = (Button) findViewById(R.id.odometerSend);
         cameraButton = (ImageButton) findViewById(R.id.camerabutton);
         odometerText = (EditText) findViewById(R.id.odometerText);
@@ -113,10 +118,15 @@ public class MainActivity extends AppCompatActivity implements
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
         vehicleArr = new ArrayList<String>();
         odoSnapArr = new ArrayList<OdometerSnap>();
+        reasons = new ArrayList<String>();
+        reasonSuggestionAdapter = new ArrayAdapter<String>(getApplicationContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                reasons);
+        reasonText.setAdapter(reasonSuggestionAdapter);
         vehicleSpinnerAdapter = new ArrayAdapter<String>(getApplicationContext(),
                 R.layout.my_spinner_item,
                 vehicleArr);
-        myVehicles = new HashMap<String,String>();
+        myVehicles = new HashMap<String, Vehicle>();
         vehicleSpinner.setAdapter(vehicleSpinnerAdapter);
         sendProgress = (ProgressBar) findViewById(R.id.progressBar);
         odoImage = (ImageView) findViewById(R.id.odoImageView);
@@ -295,32 +305,43 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private void updateReasons() {
+        if (mLocation == null) {
+            return;
+        }
+        reasons.clear();
+        for (OdometerSnap o: odoSnapArr) {
+            if (o.getReason() != null && !o.getReason().equals("")) {
+                // FIXME here also set a distance constraint
+                if (!reasons.contains(o.getReason())) {
+                    reasons.add(o.getReason());
+                }
+            }
+        }
+
+    }
+
     private void requestVehicles() {
 
         vehicleArr.clear();
         myVehicles.clear();
-        mApi.get_vehicles(
-                new Response.Listener<JSONObject>() {
+        mApi.get_vehicles(myVehicles,
+                new KorjournalAPIInterface() {
                     @Override
-                    public void onResponse(JSONObject response) {
-                        // Display the first 500 characters of the response string.
-                        try {
-                            JSONArray vehicles = response.getJSONArray("results");
-                            for (int i=0; i < vehicles.length(); i++) {
-                                JSONObject v = vehicles.getJSONObject(i);
-                                vehicleArr.add(v.getString("name"));
-                                myVehicles.put(v.getString("name"),v.getString("url"));
-                                vehicleSpinnerAdapter.notifyDataSetChanged();
-                                setSelectedVehicle();
-                            }
+                    public void done() {
+                        for (String vName: myVehicles.keySet()) {
+                            vehicleArr.add(vName);
                         }
-                        catch (JSONException e)
-                        {
-                            onRequestResponse("JSON-fel!");
-                            vehicleArr.add("Fel: inga fordon!");
-                            vehicleSpinnerAdapter.notifyDataSetChanged();
-                        }
+                        vehicleSpinnerAdapter.notifyDataSetChanged();
+                        setSelectedVehicle();
                     }
+                    @Override
+                    public void error(String e) {
+                        onRequestResponse(e);
+                        vehicleArr.add("Fel: inga fordon!");
+                        vehicleSpinnerAdapter.notifyDataSetChanged();
+                    }
+
                 },
                 new Response.ErrorListener() {
                     @Override
@@ -338,10 +359,10 @@ public class MainActivity extends AppCompatActivity implements
 
         odoSnapArr.clear();
         mApi.get_odosnaps(odoSnapArr,
-                new KorjournalAPIDone() {
+                new KorjournalAPIInterface() {
                     @Override
                     public void done() {
-
+                        updateReasons();
                     }
                     @Override
                     public void error(String error) {
@@ -380,13 +401,12 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             String prefVehicleUrl = sharedPreferences.getString("vehicle_list","");
             if (!prefVehicleUrl.equals("")) {
-                // loop over myvehicles and find the name corresponding to pref
-                for (String key : myVehicles.keySet()) {
-                    if (myVehicles.get(key).equals(prefVehicleUrl)) {
+                for (String vName : myVehicles.keySet()) {
+                    if (myVehicles.get(vName).getUrl().equals(prefVehicleUrl)) {
                         for (int i=0;i<vehicleArr.size();i++) {
-                            if (key.equals(vehicleArr.get(i))) {
+                            if (vName.equals(vehicleArr.get(i))) {
                                 vehicleSpinner.setSelection(i);
-                                vehicleSelected = key;
+                                vehicleSelected = vName;
                                 break;
                             }
                         }
@@ -398,7 +418,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private void sendOdometersnap() {
 
-        String vehicle = myVehicles.get(vehicleSpinner.getSelectedItem().toString());
+        String vehicleUrl = myVehicles.get(vehicleSpinner.getSelectedItem().toString()).getUrl();
         String odometer = odometerText.getText().toString();
         try {
             if (Integer.valueOf(odometer) < 1) {
@@ -413,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements
         odometerSend.setClickable(false);
 
         sendProgress.setProgress(30);
-        mApi.send_odometersnap(vehicle,
+        mApi.send_odometersnap(vehicleUrl,
                 odometer,
                 mLocation,
                 streetAddress,
@@ -503,13 +523,20 @@ public class MainActivity extends AppCompatActivity implements
 
         if (mLocation != null) {
             locationText.setText(String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
-            Thread thread = new Thread() {
+            Thread addressThread = new Thread() {
                 @Override
                 public void run() {
                     updateStreetAddress();
                 }
             };
-            thread.start();
+            addressThread.start();
+            Thread reasonThread = new Thread() {
+                @Override
+                public void run() {
+                    updateReasons();
+                }
+            };
+            reasonThread.start();
         }
     }
 

@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 import se.linefeed.korjournal.api.KorjournalAPI;
+import se.linefeed.korjournal.api.KorjournalAPIInterface;
+import se.linefeed.korjournal.models.Vehicle;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -389,30 +391,27 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         protected void updateVehicleList() {
             final ArrayList<String> vehiclenames = new ArrayList<String>();
             final ArrayList<String> vehicleids = new ArrayList<String>();
+            final HashMap<String, Vehicle> vehicles = new HashMap<String, Vehicle>();
             if (mApi == null) {
                 mApi = new KorjournalAPI(getActivity());
             }
-            mApi.get_vehicles(
-                    new Response.Listener<JSONObject>() {
+            mApi.get_vehicles(vehicles,
+                    new KorjournalAPIInterface() {
                         @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                JSONArray vehicles = response.getJSONArray("results");
-                                for (int i=0; i < vehicles.length(); i++) {
-                                    JSONObject v = vehicles.getJSONObject(i);
-                                    vehiclenames.add(v.getString("name"));
-                                    vehicleids.add(v.getString("url"));
-                                }
-                                vehicleListPreference.setEntries(vehiclenames.toArray(new CharSequence[vehiclenames.size()]));
-                                vehicleListPreference.setEntryValues(vehicleids.toArray(new CharSequence[vehicleids.size()]));
+                        public void done() {
+                            for (String vName: vehicles.keySet()) {
+                                vehiclenames.add(vName);
+                                vehicleids.add(vehicles.get(vName).getUrl());
                             }
-                            catch (JSONException e)
-                            {
-                                CharSequence[] err = { "Inga fordon" };
-                                CharSequence[] errVal = { "0" };
-                                vehicleListPreference.setEntries(err);
-                                vehicleListPreference.setEntryValues(errVal);
-                            }
+                            vehicleListPreference.setEntries(vehiclenames.toArray(new CharSequence[vehiclenames.size()]));
+                            vehicleListPreference.setEntryValues(vehicleids.toArray(new CharSequence[vehicleids.size()]));
+                        }
+                        @Override
+                        public void error(String e) {
+                            CharSequence[] err = { "Inga fordon" };
+                            CharSequence[] errVal = { "0" };
+                            vehicleListPreference.setEntries(err);
+                            vehicleListPreference.setEntryValues(errVal);
                         }
                     },
                     new Response.ErrorListener() {
@@ -427,6 +426,4 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             );
         }
     }
-
-
 }
