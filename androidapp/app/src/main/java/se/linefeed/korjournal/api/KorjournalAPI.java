@@ -245,9 +245,6 @@ public class KorjournalAPI {
                                 JSONObject o = odoSnaps.getJSONObject(i);
                                 OdometerSnap oSnap = new OdometerSnap();
                                 odoSnapArr.add(oSnap.loadFromJSON(o));
-                                if (oSnap.getReason() != null) {
-                                    Log.i("API", "Reason loaded: " + oSnap.getReason());
-                                }
                             }
                         }
                         catch (JSONException e)

@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements
         odoSnapArr = new ArrayList<OdometerSnap>();
         reasons = new ArrayList<String>();
         reasonSuggestionAdapter = new ArrayAdapter<String>(getApplicationContext(),
-                android.R.layout.simple_dropdown_item_1line,
+                R.layout.my_dropdown_item_1line,
                 reasons);
         reasonText.setAdapter(reasonSuggestionAdapter);
         vehicleSpinnerAdapter = new ArrayAdapter<String>(getApplicationContext(),
