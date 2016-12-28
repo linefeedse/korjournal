@@ -59,6 +59,7 @@ import se.linefeed.korjournal.api.KorjournalAPI;
 import se.linefeed.korjournal.api.KorjournalAPIDone;
 import se.linefeed.korjournal.api.KorjournalAPIInterface;
 import se.linefeed.korjournal.models.OdometerSnap;
+import se.linefeed.korjournal.models.Position;
 import se.linefeed.korjournal.models.Vehicle;
 
 public class MainActivity extends AppCompatActivity implements
@@ -219,14 +220,21 @@ public class MainActivity extends AppCompatActivity implements
         if (mLocation != null) {
             locationText.setText(String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
         }
-        Thread thread = new Thread() {
+        Thread addressThread = new Thread() {
             @Override
             public void run() {
                 updateStreetAddress();
             }
         };
-        thread.start();
+        addressThread.start();
         locationText.setText("");
+        Thread reasonThread = new Thread() {
+            @Override
+            public void run() {
+                updateReasons();
+            }
+        };
+        reasonThread.start();
     }
 
     private boolean checkSelections() {
@@ -309,16 +317,23 @@ public class MainActivity extends AppCompatActivity implements
         if (mLocation == null) {
             return;
         }
+        Position currentPos = new Position(mLocation.getLatitude(), mLocation.getLongitude());
         reasons.clear();
         for (OdometerSnap o: odoSnapArr) {
-            if (o.getReason() != null && !o.getReason().equals("")) {
-                // FIXME here also set a distance constraint
-                if (!reasons.contains(o.getReason())) {
-                    reasons.add(o.getReason());
-                }
+            if (o.getReason() == null || o.getReason().equals("")) {
+                continue;
             }
+            if (reasons.contains(o.getReason())) {
+                continue;
+            }
+            if (currentPos.distanceFrom(o.getPosition()) > 0.5) {
+                Log.i(TAG,"Distance: " + currentPos.distanceFrom(o.getPosition()));
+                continue;
+            }
+            reasons.add(o.getReason());
+            Log.i(TAG,"Added reason " + o.getReason());
         }
-
+        reasonSuggestionAdapter.notifyDataSetChanged();
     }
 
     private void requestVehicles() {

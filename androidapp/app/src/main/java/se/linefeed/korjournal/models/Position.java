@@ -1,5 +1,8 @@
 package se.linefeed.korjournal.models;
 
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
+
 public class Position {
 
     private double poslong;
@@ -31,4 +34,13 @@ public class Position {
         this.poslat = poslat;
     }
 
+    /**
+     * @param other Position
+     * @return distanceKm double
+     */
+    public double distanceFrom(Position other) {
+        double distanceLat = 111.2 * (other.getPoslat() - this.getPoslat());
+        double distanceLon = 57.1 * (other.getPoslong() - this.getPoslong());
+        return sqrt(pow(distanceLon,2)+pow(distanceLat,2));
+    }
 }

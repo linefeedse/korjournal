@@ -63,8 +63,8 @@ public class OdometerSnap {
         isStart = jsonObject.getString("type").equals("1");
         isEnd = jsonObject.getString("type").equals("2");
         */
-        double poslat = jsonObject.getLong("poslat");
-        double poslon = jsonObject.getLong("poslon");
+        double poslat = jsonObject.getDouble("poslat");
+        double poslon = jsonObject.getDouble("poslon");
         position = new Position(poslat, poslon);
         reason = jsonObject.getString("why");
         return this;
