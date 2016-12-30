@@ -1,5 +1,6 @@
 package se.linefeed.korjournal;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -8,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 
 import se.linefeed.korjournal.models.OdometerSnap;
@@ -30,8 +32,10 @@ public class TripListActivity extends AppCompatActivity {
 
         tripListView = this;
 
-        /******** Take some data in Arraylist ( CustomListViewValuesArr ) ***********/
-        setListData();
+        Intent intent = this.getIntent();
+        String vehicleUrl = intent.getStringExtra("vehicleUrl");
+
+        setListData(vehicleUrl);
 
         Resources res = getResources();
         list= ( ListView )findViewById( R.id.tripListView );
@@ -43,16 +47,18 @@ public class TripListActivity extends AppCompatActivity {
     }
 
     /****** Function to set data in ArrayList *************/
-    public void setListData()
+    public void setListData(String vehicleUrl)
     {
-
+        if (vehicleUrl == null) {
+            return;
+        }
         DatabaseOpenHelper dboh = new DatabaseOpenHelper(getApplicationContext());
         SQLiteDatabase db = dboh.getReadableDatabase();
         String cols[] = { "occurred", "streetAddress", "odometer", "why", "start_end" };
         String orderBy = "occurred DESC";
         String groupBy = null;
         String having = null;
-        String selection = null;
+        String selection = "vehicle = '" + vehicleUrl + "'";
 
         Cursor cursor = db.query("OdoSnaps", cols, selection, null, groupBy, having, orderBy);
         ArrayList<OdometerSnap> odoSnaps = new ArrayList<>();
@@ -62,12 +68,19 @@ public class TripListActivity extends AppCompatActivity {
             odoSnaps.add(os);
         }
         cursor.close();
+        db.close();
         TripListModel tmpTrip = null;
         for (OdometerSnap snap: odoSnaps) {
 
             if (snap.isStart() && tmpTrip == null) {
-                final TripListModel trip = new TripListModel(snap.getWhen(),
-                        "(pågående)",
+                String occured = "";
+                try {
+                    occured = snap.getWhenLocal();
+                } catch (ParseException e) {
+
+                }
+                final TripListModel trip = new TripListModel(occured,
+                        "(ej avslutad)",
                         "",
                         "Från: " + snap.getStreetAddress(),
                         snap.getReason());
@@ -79,14 +92,26 @@ public class TripListActivity extends AppCompatActivity {
                 if (tmpTrip.getReason().equals("") && !snap.getReason().equals("")) {
                     tmpTrip.setReason(snap.getReason());
                 }
-                tmpTrip.setKmString(tmpTrip.getKmString() + "-");
-                tmpTrip.setWhen(snap.getWhen() + "-" + tmpTrip.getWhen());
+                tmpTrip.setKmString(snap.getOdometer() + " - " + tmpTrip.getKmString());
+                String occured = "";
+                try {
+                    occured = snap.getWhenLocal();
+                } catch (ParseException e) {
+
+                }
+                tmpTrip.setWhen(occured + " - " + tmpTrip.getWhen());
                 final TripListModel trip = new TripListModel(tmpTrip);
                 tripViewValuesArr.add(trip);
                 tmpTrip = null;
             }
             if (snap.isEnd()) {
-                tmpTrip = new TripListModel("" + snap.getWhen(),
+                String occured = "";
+                try {
+                    occured = snap.getWhenLocal();
+                } catch (ParseException e) {
+
+                }
+                tmpTrip = new TripListModel(occured,
                         "Till: " + snap.getStreetAddress(),
                         "" + snap.getOdometer(),
                         null,

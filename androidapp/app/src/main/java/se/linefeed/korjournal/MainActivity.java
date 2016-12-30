@@ -383,6 +383,7 @@ public class MainActivity extends AppCompatActivity implements
                         for (OdometerSnap o: odoSnapArr) {
                             o.insertDb(db);
                         }
+                        db.close();
                         updateReasons();
                     }
                     @Override
@@ -588,6 +589,8 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             case R.id.action_tripview:
                 intent = new Intent(this, TripListActivity.class);
+                String vehicleUrl = myVehicles.get(vehicleSpinner.getSelectedItem().toString()).getUrl();
+                intent.putExtra("vehicleUrl", vehicleUrl);
                 startActivity(intent);
             default:
                 // If we got here, the user's action was not recognized.

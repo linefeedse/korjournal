@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:paddingTop="5dp"
+    android:paddingRight="7dp"
+    android:paddingLeft="7dp">
 
     <TableRow
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
         <TextView
-            android:text="TextView"
+            android:text="Datum"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/date" />
+            android:id="@+id/date"
+            android:textStyle="bold" />
     </TableRow>
 
     <TableRow
@@ -18,7 +22,7 @@
         android:layout_height="match_parent" >
 
         <TextView
-            android:text="TextView"
+            android:text="Från:"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/from" />
@@ -29,7 +33,7 @@
         android:layout_height="match_parent" >
 
         <TextView
-            android:text="TextView"
+            android:text="Till:"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/to" />
@@ -40,7 +44,7 @@
         android:layout_height="match_parent" >
 
         <TextView
-            android:text="TextView"
+            android:text="Mätarställning"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/km" />
@@ -51,7 +55,7 @@
         android:layout_height="match_parent" >
 
         <TextView
-            android:text="TextView"
+            android:text="Syfte:"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/reason" />

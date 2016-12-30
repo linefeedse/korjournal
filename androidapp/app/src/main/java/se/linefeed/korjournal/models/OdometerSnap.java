@@ -7,6 +7,11 @@ import android.database.sqlite.SQLiteDatabase;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class OdometerSnap {
 
     private String vehicle;
@@ -115,12 +120,10 @@ public class OdometerSnap {
      * @throws JSONException
      */
     public OdometerSnap loadFromJSON(JSONObject jsonObject) throws JSONException {
-       /* These members are not required right now
-        vehicle = jsonObject.getString("name");
+        vehicle = jsonObject.getString("vehicle");
         odometer = jsonObject.getInt("odometer");
         isStart = jsonObject.getString("type").equals("1");
         isEnd = jsonObject.getString("type").equals("2");
-        */
         when = jsonObject.getString("when");
         streetAddress = jsonObject.getString("where");
         double poslat = jsonObject.getDouble("poslat");
@@ -168,6 +171,15 @@ public class OdometerSnap {
 
     public String getWhen() {
         return when;
+    }
+
+    public String getWhenLocal() throws ParseException {
+        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date value = parser.parse(when);
+        SimpleDateFormat print = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        print.setTimeZone(TimeZone.getDefault());
+        return print.format(value);
     }
 
     public void setWhen(String when) {
