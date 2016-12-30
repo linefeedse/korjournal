@@ -2,7 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Settings, should always be in the overflow -->
+    <item android:id="@+id/action_tripview"
+        android:title="Tidigare resor"/>
     <item android:id="@+id/action_settings"
-        android:title="inställningar"/>
+        android:title="Inställningar"/>
 
 </menu>

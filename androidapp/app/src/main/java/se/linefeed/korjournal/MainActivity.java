@@ -2,6 +2,7 @@ package se.linefeed.korjournal;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
@@ -56,7 +57,6 @@ import java.util.List;
 import java.util.Locale;
 
 import se.linefeed.korjournal.api.KorjournalAPI;
-import se.linefeed.korjournal.api.KorjournalAPIDone;
 import se.linefeed.korjournal.api.KorjournalAPIInterface;
 import se.linefeed.korjournal.models.OdometerSnap;
 import se.linefeed.korjournal.models.Position;
@@ -377,6 +377,12 @@ public class MainActivity extends AppCompatActivity implements
                 new KorjournalAPIInterface() {
                     @Override
                     public void done() {
+                        DatabaseOpenHelper dboh = new DatabaseOpenHelper(getApplicationContext());
+                        SQLiteDatabase db = dboh.getWritableDatabase();
+                        db.delete("OdoSnaps", null, null);
+                        for (OdometerSnap o: odoSnapArr) {
+                            o.insertDb(db);
+                        }
                         updateReasons();
                     }
                     @Override
@@ -573,12 +579,16 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent = null;
         switch (item.getItemId()) {
             case R.id.action_settings:
                 // User chose the "Settings" item, show the app settings UI...
-                Intent intent = new Intent(this, SettingsActivity.class);
+                intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
+            case R.id.action_tripview:
+                intent = new Intent(this, TripListActivity.class);
+                startActivity(intent);
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
