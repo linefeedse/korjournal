@@ -28,6 +28,9 @@
     <string name="pref_create_vehicle">Nytt fordon...</string>
     <string name="new_vehicle_name">Namn på nytt fordon (registreringsnummer)</string>
     <string name="select_vehicle">Välj Fordon</string>
+    <string name="dialog_not_registered">För att använda tjänsten behöver du en personlig kod. Gå till inställningarna nu?</string>
+    <string name="go_to_settings">Inställningar...</string>
+    <string name="cancel">Nej tack!</string>
 
 
 </resources>

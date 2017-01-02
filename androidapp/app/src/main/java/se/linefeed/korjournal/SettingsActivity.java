@@ -258,70 +258,24 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             mRequestQueue.add(stringRequest);
         }
         private void tryRegisterCode(String newCode) {
-            final String VER_URL = getString(R.string.url) + "/verify/";
-            final String CHK_URL = getString(R.string.url) + "/api/vehicle/";
+
+            Context context = usernamePreference.getContext();
+            KorjournalAPI api = new KorjournalAPI(context);
             final String phone = PreferenceManager
-                    .getDefaultSharedPreferences(usernamePreference.getContext())
+                    .getDefaultSharedPreferences(context)
                     .getString(usernamePreference.getKey(),"");
-            final String code = newCode;
-
-            if (mRequestQueue == null) {
-                mRequestQueue = Volley.newRequestQueue(getActivity());
-            }
-
-            // Before trying to verify, check if code is already ok
-            StringRequest checkRequest = new StringRequest(Request.Method.GET, CHK_URL, new Response.Listener<String>() {
+            api.tryRegisterCode(phone, newCode, new KorjournalAPIInterface() {
                 @Override
-                public void onResponse(String response) {
-                    Log.i("Info", "Server responded ok: " + response);
+                public void done() {
                     codeText.setSummary("OK!");
                 }
-            }, new Response.ErrorListener() {
+
                 @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.e("Error", "Server responded " + error.networkResponse.statusCode);
-                    StringRequest verifyRequest = new StringRequest(Request.Method.POST, VER_URL, new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            Log.i("Info", "Server responded ok: " + response);
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            Log.e("Error", "Server responded " + error.networkResponse.statusCode);
-                            codeText.setSummary("Ogiltig kod!");
-                        }
-                    }) {
-                        @Override
-                        protected Map<String,String> getParams(){
-                            Map<String,String> params = new HashMap<String, String>();
-                            params.put("phone",phone);
-                            params.put("code", code);
-                            return params;
-                        }
-
-                        @Override
-                        public Map<String, String> getHeaders() throws AuthFailureError {
-                            Map<String,String> params = new HashMap<String, String>();
-                            params.put("Content-Type","application/x-www-form-urlencoded");
-                            return params;
-                        }
-                    };
-                    mRequestQueue.add(verifyRequest);
+                public void error(String error) {
+                    codeText.setSummary("Ogiltig kod!");
                 }
-            }) {
-
-                public Map<String, String> getHeaders() throws AuthFailureError {
-                    HashMap<String, String> headers = new HashMap<String, String>();
-                    String creds = String.format("%s:%s",phone,code);
-                    String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
-                    headers.put("Authorization", auth);
-                    return headers;
-                }
-            };
-            mRequestQueue.add(checkRequest);
+            });
         }
-
     }
 
     /**

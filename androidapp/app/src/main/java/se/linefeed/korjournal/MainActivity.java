@@ -10,6 +10,8 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -30,6 +32,7 @@ import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.NoConnectionError;
 import com.android.volley.RequestQueue;
@@ -148,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+
+        checkRegistration();
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(this);
         }
@@ -237,6 +242,28 @@ public class MainActivity extends AppCompatActivity implements
         reasonThread.start();
     }
 
+    private void checkRegistration() {
+        if (sharedPreferences.getString("username_text","").equals("") || sharedPreferences.getString("code_text","").equals("")) {
+            RegistrationRequiredDialogFragment registrationNeeded = new RegistrationRequiredDialogFragment();
+            Bundle args = new Bundle();
+            args.putString("message", "För att använda tjänsten behöver du en personlig kod. Gå till inställningar nu?");
+            registrationNeeded.setArguments(args);
+            registrationNeeded.show(getFragmentManager(),"not_registered");
+        }
+    }
+
+    private void authFailed() {
+        if (sharedPreferences.getString("username_text","").equals("") || sharedPreferences.getString("code_text","").equals("")) {
+            checkRegistration();
+        } else {
+            RegistrationRequiredDialogFragment registrationNeeded = new RegistrationRequiredDialogFragment();
+            Bundle args = new Bundle();
+            args.putString("message", "Den personliga koden verkar vara ogiltig. Gå till inställningar nu?");
+            registrationNeeded.setArguments(args);
+            registrationNeeded.show(getFragmentManager(),"login_failed");
+        }
+    }
+
     private boolean checkSelections() {
         final int flash_color = 0xFFEE3030;
         final int transparent = 0x00000000;
@@ -269,6 +296,17 @@ public class MainActivity extends AppCompatActivity implements
                 public void run() {
                     odoImage.setBackgroundColor(transparent);
                     odometerText.setBackgroundColor(transparent);
+                }
+            }, 300);
+            return false;
+        }
+        if (myVehicles == null || myVehicles.get(vehicleSpinner.getSelectedItem().toString()) == null) {
+            vehicleSpinner.setBackgroundColor(flash_color);
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    vehicleSpinner.setBackgroundColor(transparent);
                 }
             }, 300);
             return false;
@@ -394,9 +432,9 @@ public class MainActivity extends AppCompatActivity implements
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        vehicleArr.add("Fel: inga fordon!");
-                        onRequestResponse("Fel: inga fordon!");
-                        vehicleSpinnerAdapter.notifyDataSetChanged();
+                        if (error.getClass() == AuthFailureError.class) {
+                            authFailed();
+                        }
                     }
                 }
         );
@@ -578,14 +616,16 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
+    public void showSettings() {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivity(intent);
+    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent = null;
         switch (item.getItemId()) {
             case R.id.action_settings:
-                // User chose the "Settings" item, show the app settings UI...
-                intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
+                showSettings();
                 return true;
             case R.id.action_tripview:
                 intent = new Intent(this, TripListActivity.class);

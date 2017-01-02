@@ -12,6 +12,8 @@ import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -26,6 +28,7 @@ import java.util.Map;
 
 import se.linefeed.korjournal.MyJsonStringRequest;
 import se.linefeed.korjournal.MyMultipartRequest;
+import se.linefeed.korjournal.R;
 import se.linefeed.korjournal.models.OdometerSnap;
 import se.linefeed.korjournal.models.Vehicle;
 
@@ -263,5 +266,65 @@ public class KorjournalAPI {
         };
         // Add the request to the RequestQueue.
         mRequestQueue.add(req);
+    }
+
+    public void tryRegisterCode(final String phone, final String code, final KorjournalAPIInterface done) {
+        final String VER_URL = base_url + "/verify/";
+        final String CHK_URL = base_url + "/api/vehicle/";
+
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(mContext);
+        }
+
+        // Before trying to verify, check if code is already ok
+        StringRequest checkRequest = new StringRequest(Request.Method.GET, CHK_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                done.done();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("Error", "Server responded " + error.networkResponse.statusCode);
+                StringRequest verifyRequest = new StringRequest(Request.Method.POST, VER_URL, new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.i("Info", "Server responded ok: " + response);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("Error", "Server responded " + error.networkResponse.statusCode);
+                        done.error("" + error.networkResponse.statusCode);
+                    }
+                }) {
+                    @Override
+                    protected Map<String,String> getParams(){
+                        Map<String,String> params = new HashMap<String, String>();
+                        params.put("phone", phone);
+                        params.put("code", code);
+                        return params;
+                    }
+
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String,String> params = new HashMap<String, String>();
+                        params.put("Content-Type","application/x-www-form-urlencoded");
+                        return params;
+                    }
+                };
+                mRequestQueue.add(verifyRequest);
+            }
+        }) {
+
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+                String creds = String.format("%s:%s", phone, code);
+                String auth = "Basic " + Base64.encodeToString(creds.getBytes(), Base64.NO_WRAP);
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
+        mRequestQueue.add(checkRequest);
     }
 }

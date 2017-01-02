@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -22,6 +25,7 @@ public class TripListActivity extends AppCompatActivity {
     TripListAdapter adapter;
     public TripListActivity tripListView = null;
     public ArrayList<TripListModel> tripViewValuesArr = new ArrayList<TripListModel>();
+    private Button linkButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,23 @@ public class TripListActivity extends AppCompatActivity {
         /**************** Create Custom Adapter *********/
         adapter=new TripListAdapter( tripListView, tripViewValuesArr,res );
         list.setAdapter( adapter );
+        linkButton = (Button)findViewById(R.id.linkButton);
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        linkButton.setClickable(true);
+        linkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View parent) {
+                String url = "http://korjournal.linefeed.se/editor/";
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                startActivity(intent);
+            }
+        });
 
     }
 
