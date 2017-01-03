@@ -16,6 +16,7 @@ router.register(r'driver', views.DriverViewSet, "vehicle")
 
 urlpatterns = [
     url(r'^$', views.landing, name='landing'),
+    url(r'^privacy-policy', views.privacy_policy, name="privacy-policy"),
     url(r'^editor/$', views.editor, name='editor'),
     url(r'^editor/(?P<odo_snap_id>[0-9]+)/delete$', views.delete_odo_snap, name='delete_odo_snap'),
     url(r'^editor/(?P<odo_image_id>[0-9]+)/deleteimage$', views.delete_odo_image, name='delete_odo_image'),

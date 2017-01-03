@@ -38,6 +38,16 @@ def landing(request):
     navigation2['text'] = 'Logga in'
     return render(request, 'korjournal/landing.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2})
 
+def privacy_policy(request):
+    baseurl_host = request.get_host()
+    navigation1 = {}
+    navigation1['link'] =  '/register/'
+    navigation1['text'] = 'Registrera'
+    navigation2 = {}
+    navigation2['link'] =  '/login/'
+    navigation2['text'] = 'Logga in'
+    return render(request, 'korjournal/privacy-policy.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2})
+
 @login_required(login_url='/login')
 def editor(request):
     odo_snap_all = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user)).order_by('-when')
