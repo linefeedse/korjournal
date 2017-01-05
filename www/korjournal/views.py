@@ -49,6 +49,11 @@ def privacy_policy(request):
     return render(request, 'korjournal/privacy-policy.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2})
 
 @login_required(login_url='/login')
+def profile(request):
+    context = { 'username': request.user.username }
+    return render(request, 'korjournal/profile.html', context)
+
+@login_required(login_url='/login')
 def editor(request):
     odo_snap_all = OdometerSnap.objects.filter(Q(vehicle__owner=request.user)|Q(vehicle__driver__user=request.user)).order_by('-when')
     paginator = Paginator(odo_snap_all, 50)

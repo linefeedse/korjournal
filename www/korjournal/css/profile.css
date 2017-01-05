@@ -1,0 +1,12 @@
+.profile-icon-box {
+	text-align: center;
+	margin-top: 25px;
+}
+
+.profile-footer {
+    border-top: 1px solid lightgrey;
+    margin-top: 35px;
+    padding-top: 5px;
+    text-align: center;
+    font-size: x-small;
+}

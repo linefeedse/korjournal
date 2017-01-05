@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% block extra_javascript %}
+<link href="/korjournal/css/font-awesome.min.css" rel="stylesheet">
+<link href="/korjournal/css/profile.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<p>
+Inloggad som {{ username }}
+</p>
+<div class="row">
+    <div class="col-xs-12 col-sm-4 center-block profile-icon-box">
+        <a href="/report/">
+            <div class="center-block">
+                <i class="fa fa-bar-chart fa-2x"></i>
+            </div>
+            Årsrapport
+        </a>
+    </div>
+    <div class="col-xs-12 col-sm-4 center-block profile-icon-box">
+        <a href="/editor/">
+            <div class="center-block">
+                <i class="fa fa-edit fa-2x"></i>
+            </div>
+            Mina mätarställningar
+        </a>
+    </div>
+    <div class="col-xs-12 col-sm-4 center-block profile-icon-box">
+        <a href="/vehicles/">
+            <div class="center-block">
+                <i class="fa fa-car fa-2x"></i>
+            </div>
+            Mina fordon
+        </a>
+    </div>
+</div>
+<div class="profile-footer">
+    <i class="fa fa-copyright"></i> Linefeed AB | <a href="/privacy-policy.html">Sekretesspolicy</a>
+</div>
+{% endblock %}

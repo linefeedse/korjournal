@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^logout/', 'django.contrib.auth.views.logout', name='logout'),
     url(r'^register/', views.doregister, name='register'),
     url(r'^verify/', views.verify, name='verify'),
+    url(r'^accounts/profile/', views.profile, name='profile'),
     url(r'^registration_complete/', views.registration_complete, name='registration_complete'),
     url(r'^vehicles/$', views.vehicles, name='vehicles'),
     url(r'^vehicles/(?P<vehicle_id>[0-9]+)/delete$', views.delete_vehicle, name='delete_vehicle'),
