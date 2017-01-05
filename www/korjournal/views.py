@@ -160,7 +160,7 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
                 pass
 
     def get_queryset(self):
-        return OdometerImage.objects.filter(Q(vehicle__owner=self.request.user)|Q(driver__user=self.request.user))
+        return OdometerImage.objects.filter(Q(odometersnap__vehicle__owner=self.request.user)|Q(driver=self.request.user))
 
 def delete_odo_image(request,odo_image_id):
     odo_image = get_object_or_404(OdometerImage, pk=odo_image_id)
