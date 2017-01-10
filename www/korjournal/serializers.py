@@ -61,15 +61,15 @@ class RegisterCodeSerializer(serializers.ModelSerializer):
             die
         return code
 
-class DriverSerializer(serializers.ModelSerializer):
+class DriverSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Driver
-        fields = ('vehicle','user')
+        fields = ('url','vehicle','user')
 
-    def create(self,validated_data):
-        try:
-            user = User.objects.filter(username=validated_data['user'])[0]
-            vehicle = Vehicle.objects.filter(id=validated_data['vehicle'])[0]
-        except IndexError:
-            return None
-        driver = Driver(user=user,vehicle=vehicle)
+#    def create(self,validated_data):
+#        try:
+#            user = User.objects.filter(username=validated_data['user'])[0]
+#            vehicle = Vehicle.objects.filter(id=validated_data['vehicle'])[0]
+#        except IndexError:
+#            return None
+#       driver = Driver(user=user,vehicle=vehicle)

@@ -142,26 +142,6 @@ class DriverViewSet(viewsets.ModelViewSet):
             return HttpResponseNotFound('Föraren finns redan på fordonet')
         return HttpResponse('{"id": %d}' % driver.id)
 
-class OdometerImageViewSet(viewsets.ModelViewSet):
-    serializer_class = OdometerImageSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
-
-    def perform_create(self,serializer):
-        imgfile = self.request.FILES.get('imagefile')
-        odoimage = serializer.save(driver=self.request.user, imagefile=imgfile)
-        if (odoimage.odometersnap.odometer < 1):
-            ocr = subprocess.run(["/usr/bin/tesseract", "/vagrant/www/media/" + odoimage.imagefile.name, "stdout", "nobatch", "digits"], stdout=subprocess.PIPE,universal_newlines=True).stdout
-            print(ocr,file=sys.stderr)
-            try:
-                newodokm = int(ocr.replace(" ",""))
-                odoimage.odometersnap.odometer = newodokm
-                odoimage.odometersnap.save()
-            except ValueError:
-                pass
-
-    def get_queryset(self):
-        return OdometerImage.objects.filter(Q(odometersnap__vehicle__owner=self.request.user)|Q(driver=self.request.user))
-
 def delete_odo_image(request,odo_image_id):
     odo_image = get_object_or_404(OdometerImage, pk=odo_image_id)
     form = DeleteOdoImageForm(request.POST)

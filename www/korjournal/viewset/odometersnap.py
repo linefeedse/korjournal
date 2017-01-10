@@ -3,9 +3,9 @@ from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound
 from django.utils import timezone
 from datetime import timedelta
 from dateutil import tz, parser
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, serializers
 from rest_framework.decorators import api_view, permission_classes
-from korjournal.models import OdometerSnap, OdometerImage
+from korjournal.models import OdometerSnap, OdometerImage, Driver, Vehicle
 from korjournal.serializers import OdometerSnapSerializer, OdometerImageSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll, IsDriver
 from django.core.exceptions import ObjectDoesNotExist
@@ -13,11 +13,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.http.request import RawPostDataException
 from django.db import IntegrityError
+import re
 
 
 class OdometerSnapViewSet(viewsets.ModelViewSet):
     serializer_class = OdometerSnapSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwner, IsDriver)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = '__all__'
     
@@ -35,6 +36,16 @@ class OdometerSnapViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self,serializer):
+        try:
+            vehicle_pk = re.sub(r'.*/([0-9]+)/*$', r'\1', self.request.data['vehicle'])
+            driver = Driver.objects.filter(user=self.request.user,vehicle=vehicle_pk)[0]
+        except IndexError:
+            try:
+                vehicleByOwner = Vehicle.objects.filter(id=vehicle_pk, owner=self.request.user)[0]
+            except IndexError:
+                raise serializers.ValidationError('User is not a driver or owner for vehicle ' + str(vehicle_pk) )
+        except AttributeError:
+            raise serializers.ValidationError(self.request.data)
         serializer.save(driver=self.request.user)
 
     def perform_update(self,serializer):

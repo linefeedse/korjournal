@@ -2,7 +2,7 @@ from django.conf.urls import url, include
 from rest_framework import routers
 from korjournal import views
 from korjournal.view import report
-from korjournal.viewset import odometersnap
+from korjournal.viewset import odometersnap, odometerimage
 
 from . import views
 
@@ -10,9 +10,9 @@ router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)
 router.register(r'groups', views.GroupViewSet)
 router.register(r'odometersnap', odometersnap.OdometerSnapViewSet, "odometersnap")
-router.register(r'odometerimage', views.OdometerImageViewSet, "odometerimage")
+router.register(r'odometerimage', odometerimage.OdometerImageViewSet, "odometerimage")
 router.register(r'vehicle', views.VehicleViewSet, "vehicle")
-router.register(r'driver', views.DriverViewSet, "vehicle")
+router.register(r'driver', views.DriverViewSet, "driver")
 
 urlpatterns = [
     url(r'^$', views.landing, name='landing'),

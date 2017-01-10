@@ -64,6 +64,12 @@ RUN echo tessedit_char_whitelist 0123456789 > /usr/share/tesseract-ocr/tessdata/
 #
 RUN apt-get install -y python3-requests-oauthlib
 
+# OpenCV for image processing
+#
+RUN apt-get -y install build-essential cmake pkg-config unzip python3-numpy curl
+# must make all in one go for image to not be huge
+RUN curl -s -O https://codeload.github.com/opencv/opencv/zip/3.2.0 && unzip 3.2.0 && mkdir buildcv && cd buildcv && cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local ../opencv-3.2.0 && make -j3 && make install/strip && cd .. && rm -rf buildcv opencv-3.2.0
+
 RUN apt-get -y install less
 ADD ./www /vagrant/www
 
