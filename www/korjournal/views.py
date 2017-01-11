@@ -114,6 +114,11 @@ class VehicleViewSet(viewsets.ModelViewSet):
     def perform_create(self,serializer):
         serializer.save(owner=self.request.user)
 
+    def list(self, request):
+        if (request.user.is_staff != True):
+            return HttpResponseNotFound('Fordon kan inte listas via API')
+        return viewsets.ModelViewSet.list(self, request)
+
 class DriverViewSet(viewsets.ModelViewSet):
     serializer_class = DriverSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner)
@@ -141,6 +146,9 @@ class DriverViewSet(viewsets.ModelViewSet):
         except IntegrityError:
             return HttpResponseNotFound('Föraren finns redan på fordonet')
         return HttpResponse('{"id": %d}' % driver.id)
+
+    def list(self, request):
+        return HttpResponseNotFound('Förare kan inte listas via API')
 
 def delete_odo_image(request,odo_image_id):
     odo_image = get_object_or_404(OdometerImage, pk=odo_image_id)

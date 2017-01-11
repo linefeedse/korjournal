@@ -10,7 +10,15 @@ import logging
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ('url', 'username', 'email', 'groups')
+        fields = ('url', 'username', 'email', 'password')
+        write_only_fields = ('password',)
+    def create(self, validated_data):
+        user = User(
+            username=validated_data['username']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
