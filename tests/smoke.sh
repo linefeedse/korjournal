@@ -11,33 +11,48 @@ api=http://$host/api
 header1="Content-Type: application/json"
 header2="Accept: application/json; indent=4"
 
-make_groups() {
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "ABC123" }' -u $admin $api/groups/ >/dev/null
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "DEF456" }' -u $admin $api/groups/ >/dev/null
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "GHI789" }' -u $admin $api/groups/ >/dev/null
+make_users() {
+	echo "creating users..."
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "abc", "password": "123" }' -u $admin $api/users/ | jq .username
+    curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "def", "password": "456" }' -u $admin $api/users/ | jq .username
+    curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "ghi", "password": "789" }' -u $admin $api/users/ | jq .username
 }
 
-make_users() {
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "abc", "groups": [ "'$api'/groups/1/" ], "password": "123" }' -u $admin $api/users/ >/dev/null
-
-#curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "def", "groups": [ "'$api'/groups/2/" ], "password": "456" }' -u $admin $api/users/ >/dev/null
-#curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "ghi", "groups": [ "'$api'/groups/3/" ], "password": "789" }' -u $admin $api/users/ >/dev/null
+unauthorized_mkuser() {
+	echo "Unauthorized user creation..."
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "username": "jkl", "password": "890" }' -u abc:123 $api/users/ 
 }
 
 make_vehicles() {
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "ABC123", "group": "'$api'/groups/1/" }' -u $admin $api/vehicle/ >/dev/null
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "DEF456", "group": "'$api'/groups/2/" }' -u $admin $api/vehicle/ >/dev/null
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "GHI789", "group": "'$api'/groups/3/" }' -u $admin $api/vehicle/ >/dev/null
+	echo "creating vehicles..."
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "ABC123" }' -u abc:123 $api/vehicle/ | jq .name
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "DEF 456" }' -u def:456 $api/vehicle/ | jq .name
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "name": "GHI 789" }' -u ghi:789 $api/vehicle/ | jq .name
+}
+
+assign_drivers() {
+	echo "assigning driver"
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "vehicle": "1", "user": "def" }' -u abc:123 $api/driver/ | jq .id
+}
+
+unauthorized_driver() {
+	echo "Unauthorized driver assignment..."
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "vehicle": "3", "user": "abc" }' -u abc:123 $api/driver/
 }
 
 test_odosnap_simple() {
 	testodo=`date +%s`
 	#
 	echo -n "Testing post of odometer $testodo..."
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0649000", "where": "kurrekurreduttgatan \"3\", 12345 Ingalunda",  "type": "1"}' -u abc:123 $api/odometersnap/ >/dev/null
-	curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep $testodo && echo "OK"
-	#curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u abc:123 $api/odometersnap/ >/dev/null
-	#curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep $testodo && echo "OK"
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'$testodo'", "vehicle": "'$api'/vehicle/2/", "poslat": "59.3325800", "poslon": "18.0649000", "where": "kurrekurreduttgatan \"3\", 12345 Ingalunda",  "type": "1"}' -u def:456 $api/odometersnap/ >/dev/null
+	curl -s -H "$header1" -H "$header2" -u def:456 $api/odometersnap/ | jq '.results[].odometer' | grep -q $testodo && echo "OK"
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "0", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u abc:123 $api/odometersnap/ >/dev/null
+	curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer' | grep -q 0 && echo "OK"
+}
+
+unauthorized_odosnap() {
+		echo "Unauthorized snap upload..."
+		curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "0", "vehicle": "'$api'/vehicle/3/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u def:456 $api/odometersnap/
 }
 
 dump_snaps() {
@@ -59,20 +74,34 @@ upload_odoimage() {
 
 test_ocr() {
 	if [ -z "$1" ]; then
-		imgfile=45678.jpg
+		imgfile=$scriptdir/45678.jpg
 	else
 		imgfile=$1
 	fi
 	echo "Testing ocr.."
-	lastsnap=$(curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'0'", "vehicle": "'$api'/vehicle/1/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u abc:123 $api/odometersnap/ | jq '.url')
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'45000'", "vehicle": "'$api'/vehicle/3/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u ghi:789 $api/odometersnap/ 
+	lastsnap=$(curl -s -H "$header1" -H "$header2" -X POST -d '{ "odometer": "'0'", "vehicle": "'$api'/vehicle/3/", "poslat": "59.3325800", "poslon": "18.0659000", "where": "kurrekurreduttgatan \"5\", 12345 Ingalunda", "type": "2"}' -u ghi:789 $api/odometersnap/ | jq '.url')
 	lastsnap=$(eval echo $lastsnap)
-	curl -X POST -s -H "$header2" -u "abc:123" -F "imagefile=@$scriptdir/$imgfile;type=image/jpg" -F 'odometersnap='$lastsnap $api/odometerimage/ #| jq '.imagefile'
-	curl -s -H "$header1" -H "$header2" -u abc:123 $api/odometersnap/ | jq '.results[].odometer'|tail -1
+	curl -X POST -s -H "$header2" -u "ghi:789" -F "imagefile=@$imgfile;type=image/jpg" -F 'odometersnap='$lastsnap $api/odometerimage/ #| jq '.imagefile'
+	curl -s -H "$header1" -H "$header2" -u ghi:789 $api/odometersnap/ | jq '.results[].odometer'|tail -1
 }
 
 add_driver() {
-	curl -s -H "$header1" -H "$header2" -X POST -d '{ "user": "0707354449", "vehicle": 1}' -u abc:123 $api/driver/ #>/dev/null
+	curl -s -H "$header1" -H "$header2" -X POST -d '{ "user": "0707354449", "vehicle": 1 }' -u abc:123 $api/driver/ #>/dev/null
 }
 
-#make_vehicles
-for i in *.jpg ; do test_ocr $i ; done
+default_testsuite() {
+	# this can be run after a /vagrant/www/manage.py flush ; /vagrant/www/manage.py createsuperuser
+	make_users
+	make_vehicles
+	assign_drivers
+	test_odosnap_simple
+	echo "testing ocr accuracy"
+	test_ocr | grep -q 45678 && echo OK
+	unauthorized_mkuser ; echo
+	unauthorized_driver ; echo
+	unauthorized_odosnap ; echo
+}
+
+default_testsuite
+#for i in $scriptdir/odometerimages/1????.jpg ; do test_ocr $i ; done

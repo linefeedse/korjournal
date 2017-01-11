@@ -136,7 +136,7 @@ class DriverViewSet(viewsets.ModelViewSet):
         except IndexError:
             return HttpResponseNotFound('Användaren är ej registerad')
         try:
-            vehicle = Vehicle.objects.filter(pk=data['vehicle'])[0]
+            vehicle = Vehicle.objects.filter(pk=data['vehicle'],owner=request.user)[0]
         except IndexError:
             return HttpResponseNotFound('{"errors":{"vehicle": "Fordonet finns inte"}}')
 
