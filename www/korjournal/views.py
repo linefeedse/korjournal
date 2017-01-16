@@ -1,8 +1,8 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, AnonymousUser
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.utils.decorators import method_decorator
@@ -21,7 +21,7 @@ import sys
 import random
 import json
 import pprint
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.http.request import RawPostDataException
@@ -110,6 +110,10 @@ class VehicleViewSet(viewsets.ModelViewSet):
     renderer_classes = (renderers.JSONRenderer,)
 
     def get_queryset(self):
+        user = self.request.user
+        if isinstance(user, AnonymousUser):
+            raise PermissionDenied
+            return Vehicle.objects.none()
         return Vehicle.objects.filter(Q(owner=self.request.user)|Q(driver__user=self.request.user))
 
     def perform_create(self,serializer):
