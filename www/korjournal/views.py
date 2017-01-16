@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from django.utils import timezone
 from datetime import timedelta
 from dateutil import tz, parser
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, renderers
 from rest_framework.decorators import api_view, permission_classes
 from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer, DriverSerializer
@@ -107,17 +107,13 @@ class GroupViewSet(viewsets.ModelViewSet):
 class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,IsOwner,IsDriver)
+    renderer_classes = (renderers.JSONRenderer,)
 
     def get_queryset(self):
         return Vehicle.objects.filter(Q(owner=self.request.user)|Q(driver__user=self.request.user))
 
     def perform_create(self,serializer):
         serializer.save(owner=self.request.user)
-
-    def list(self, request):
-        if (request.user.is_staff != True):
-            return HttpResponseNotFound('Fordon kan inte listas via API')
-        return viewsets.ModelViewSet.list(self, request)
 
 class DriverViewSet(viewsets.ModelViewSet):
     serializer_class = DriverSerializer

@@ -35,6 +35,11 @@ assign_drivers() {
 	curl -s -H "$header1" -H "$header2" -X POST -d '{ "vehicle": "1", "user": "def" }' -u abc:123 $api/driver/ | jq .id
 }
 
+query_vehicles() {
+    echo "checking how many vehicles 'def' can see (should be 2)"
+	curl -s -H "$header1" -H "$header2" -u def:456 $api/vehicle/ | jq .count
+}
+
 unauthorized_driver() {
 	echo "Unauthorized driver assignment..."
 	curl -s -H "$header1" -H "$header2" -X POST -d '{ "vehicle": "3", "user": "abc" }' -u abc:123 $api/driver/
@@ -95,6 +100,7 @@ default_testsuite() {
 	make_users
 	make_vehicles
 	assign_drivers
+    query_vehicles
 	test_odosnap_simple
 	echo "testing ocr accuracy"
 	test_ocr | grep -q 45678 && echo OK
