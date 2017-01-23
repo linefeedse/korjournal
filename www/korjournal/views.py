@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view, permission_classes
 from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer, DriverSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll, IsDriver
-from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm
+from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm, ContactForm
 import copy
 import subprocess
 import sys
@@ -26,6 +26,38 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.http.request import RawPostDataException
 from django.db import IntegrityError
+from django.template import Context
+from django.template.loader import get_template
+from django.core.mail import EmailMessage
+
+def handle_contactform(request,form):
+    if form.is_valid():
+        name = form.cleaned_data['name']
+        email = form.cleaned_data['email']
+        subject = form.cleaned_data['subject']
+        message = form.cleaned_data['message']
+
+        template = get_template('mail/contact.txt')
+        context = Context({
+            'name': name,
+            'email': email,
+            'subject': subject,
+            'message': message
+            })
+        content = template.render(context)
+        emailMessage = EmailMessage(
+                "Kilometerkolls kontaktformulär",
+                content,
+                "Kilometerkoll <noreply@kilometerkoll.se>",
+                ['kundtjanst@kilometerkoll.se'],
+                headers = {'Reply-To': email }
+            )
+        emailMessage.send()
+        form.add_error('message', "Meddelandet har skickats")
+        return form
+
+    form.add_error('recaptcha', "Formuläret var inte giltigt")
+    return form
 
 # Create your views here.
 def landing(request):
@@ -46,7 +78,13 @@ def privacy_policy(request):
     navigation2 = {}
     navigation2['link'] =  '/login/'
     navigation2['text'] = 'Logga in'
-    return render(request, 'korjournal/privacy-policy.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2})
+    alert = ""
+    if request.method == 'POST':
+        contactform = ContactForm(data=request.POST) 
+        contactform = handle_contactform(request, contactform)
+    else:
+        contactform = ContactForm()
+    return render(request, 'korjournal/privacy-policy.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2, 'alert': alert, 'contactform': contactform})
 
 @login_required(login_url='/login')
 def profile(request):

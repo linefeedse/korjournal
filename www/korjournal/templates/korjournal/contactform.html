@@ -1,0 +1,30 @@
+<form role="form" action="" method="post">
+    {% csrf_token %}
+
+    <p><label for="id_name" class="{% if contactform.errors.name %}alert-danger{% endif %}">
+    	Namn: (måste anges)
+    </label></p>
+    <input id="id_name" name="name" type="text" class="contactform-text" value="{{ contactform.data.name }}">
+
+	<p><label for="id_email"  class="{% if contactform.errors.email %}alert-danger{% endif %}">
+		Epostadress: (måste anges)
+	</label></p>
+	<input id="id_email" name="email" type="text" class="contactform-text" value="{{ contactform.data.email }}">
+	
+	<p><label for="id_subject" class="{% if contactform.errors.subject %}alert-danger{% endif %}">
+		Ärende: (måste anges)
+	</label></p>
+	<input id="id_subject" name="subject" type="text" class="contactform-text" value="{{ contactform.data.subject }}">
+	
+	<p><label for="id_message">Meddelande:</label></p>
+	<textarea cols="40" id="id_message" name="message" rows="10" class="contactform-text">{{ contactform.cleaned_data.message }}</textarea>
+    {{ contactform.recaptcha }} <input type="submit" class="contactform-submit"></input>
+      <span class="alert alert-danger">
+      {% if contactform.errors.message %}
+          {{ contactform.errors.message|join:', ' }}
+      {% endif %}
+      {% if contactform.errors.recaptcha %}
+          : {{ contactform.errors.recaptcha|join:', ' }}
+      {% endif %}
+      </span>
+</form>

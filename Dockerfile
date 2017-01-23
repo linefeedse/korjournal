@@ -48,13 +48,6 @@ RUN apt-get -y install python3-pymysql
 #
 RUN pip3 install django-bootstrap3
 
-# Supervisor and conf
-#
-RUN apt-get install -y supervisor
-ADD ./conf/nginx-app.conf /etc/nginx/sites-enabled/nginx-app.conf
-ADD ./conf/supervisor-app.conf /etc/supervisor/conf.d/supervisor-app.conf
-RUN rm /etc/nginx/sites-enabled/default
-
 # Tesseract OCR
 #
 RUN apt-get install -y tesseract-ocr
@@ -71,7 +64,17 @@ RUN apt-get -y install build-essential cmake pkg-config unzip python3-numpy curl
 RUN curl -s -O https://codeload.github.com/opencv/opencv/zip/3.2.0 && unzip 3.2.0 && mkdir buildcv && cd buildcv && cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local ../opencv-3.2.0 && make -j3 && make install/strip && cd .. && rm -rf buildcv opencv-3.2.0
 
 RUN apt-get -y install less
+
+# Supervisor and conf
+#
+RUN apt-get install -y supervisor
+ADD ./conf/nginx-app.conf /etc/nginx/sites-enabled/nginx-app.conf
+ADD ./conf/supervisor-app.conf /etc/supervisor/conf.d/supervisor-app.conf
+RUN rm /etc/nginx/sites-enabled/default
+
 ADD ./www /vagrant/www
+
+RUN sed -i 's/DEBUG = True/DEBUG = False/' /vagrant/www/app/settings.py
 
 EXPOSE 80
 CMD ["supervisord", "-n"]
