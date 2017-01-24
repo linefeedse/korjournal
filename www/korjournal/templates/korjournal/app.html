@@ -8,10 +8,9 @@
     <link rel="profile" href="http://gmpg.org/xfn/11"/>
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
         
-    <title>Kilometerkoll &#8211; sekretesspolicy</title>
+    <title>Kilometerkoll &#8211; smartphone-app</title>
 
     <link rel="stylesheet" id="ls-google-fonts-css" href="/korjournal/css/css" type="text/css" media="all">
-    <link rel="stylesheet" if="contactform-css" href="/korjournal/css/contactform.css" type="text/css" media="all">
     <link rel="stylesheet" id="contact-form-7-css" href="/korjournal/css/styles.css" type="text/css" media="all">
     <link rel="stylesheet" id="qode_startit_default_style-css" href="/korjournal/css/style.css" type="text/css" media="all">
     <link rel="stylesheet" id="qode_startit_modules_plugins-css" href="/korjournal/css/plugins.min.css" type="text/css" media="all">
@@ -33,9 +32,6 @@
     <script type="text/javascript" src="/korjournal/js/jquery-migrate.min.js"></script>
     <script type="text/javascript" src="/korjournal/js/layerslider.kreaturamedia.jquery.js"></script>
     <script type="text/javascript" src="/korjournal/js/layerslider.transitions.js"></script>
-
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-
 
 <link rel="icon" href="http://www.linefeed.se/wp-content/uploads/2016/04/cropped-linefeed-boomerang-32x32.png" sizes="32x32" />
 <link rel="icon" href="http://www.linefeed.se/wp-content/uploads/2016/04/cropped-linefeed-boomerang-192x192.png" sizes="192x192" />
@@ -123,7 +119,7 @@
                                 <div class="qodef-position-center-inner">
                                     <div class="qodef-mobile-logo-wrapper">
                                         <a href="http://{{ baseurl_host }}/" style="height: 46px">
-                                            <img src="/static/digimad-van-32x32.png" alt="mobile-logo"/>
+                                            <img src="/static/digimad-van-180x180.png" alt="mobile-logo"/>
                                         </a>
                                     </div>
                                 </div>
@@ -165,7 +161,7 @@
 <div class="vc_empty_space" style="height: 22px"><span class="vc_empty_space_inner"></span></div>
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <h2>Sekretesspolicy</h2>
+            <h2>Kilometerkolls mobilappar</h2>
 
         </div>
     </div>
@@ -173,9 +169,16 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
+
             <p>
-            <span id="what" style="color: #000000;">
-            <strong>Den här policyn beskriver vilken information vi samlar in när du som kund använder webbplatsen "korjournal.linefeed.se" och appen "Linefeed Körjournal" och hur vi sedan använder och skyddar denna information.<br>
+            <span style="color: red;">
+            <strong>
+            {% if form.errors.phone %}
+                Det inträffade ett fel: {{ form.errors.phone|join:', ' }}
+            {% endif%}
+            {% if form.cleaned_data.phone %}
+                Ett SMS med länk har skickats till telefonnummer +46 {{ form.data.phone }}
+            {% endif %}
             </strong>
             </span>
             </p>
@@ -187,7 +190,7 @@
 
     <span class="qodef-icon-shortcode circle qodef-icon-animation" style="width: 90px;height: 90px;line-height: 90px;background-color: #4090d0;border-style: solid;border-width: 0px" data-hover-background-color="#979797" data-animation-delay="100" data-hover-color="#ffffff" data-color="#ffffff">
 
-        <i class="qodef-icon-font-awesome fa fa-camera qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
+        <i class="qodef-icon-font-awesome fa fa-android qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
             </span>
 
     </span>
@@ -195,7 +198,7 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <h5 id="bilder">Kamerabilder</h5>
+            <h5 id="bilder">Android</h5>
 
         </div>
     </div>
@@ -203,7 +206,7 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <p>Bilder från din kamera används för att dokumentera mätarställningen i ditt fordon. De analyseras för att hitta kilometertalet och sparas i vår server.</p>
+            <p>Appen heter "Kilometerkoll körjournal" och du hittar den <a href="http://play.google.com/store/apps/details?id=se.linefeed.korjournal">i Google Play Store</a></p>
 
         </div>
     </div>
@@ -212,7 +215,7 @@
 
     <span class="qodef-icon-shortcode circle qodef-icon-animation" style="width: 90px;height: 90px;line-height: 90px;background-color: #4090d0;border-style: solid;border-width: 0px" data-hover-background-color="#979797" data-animation-delay="300" data-hover-color="#ffffff" data-color="#ffffff">
 
-        <i class="qodef-icon-font-awesome fa fa-location-arrow qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
+        <i class="qodef-icon-font-awesome fa fa-apple qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
             </span>
 
     </span>
@@ -220,7 +223,7 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <h5 id="process">Position</h5>
+            <h5 id="process">iOS</h5>
 
         </div>
     </div>
@@ -228,7 +231,7 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <p>När du klickar på sänd-knappen i appen skickas din position till vår server. Positionen, och enbart positionen skickas till en tredje part för att avgöra gatuadressen.</p>
+            <p>Appen är under utveckling, vi hoppas få den färdig under våren 2017. Du kan <a href="/#contact">anmäla intresse</a> så hör vi av oss när den är klar.</p>
 
         </div>
     </div>
@@ -237,7 +240,7 @@
 
     <span class="qodef-icon-shortcode circle qodef-icon-animation" style="width: 90px;height: 90px;line-height: 90px;background-color: #4090d0;border-style: solid;border-width: 0px" data-hover-background-color="#979797" data-animation-delay="500" data-hover-color="#ffffff" data-color="#ffffff">
 
-        <i class="qodef-icon-font-awesome fa fa-mobile-phone qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
+        <i class="qodef-icon-font-awesome fa fa-windows qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
             </span>
 
     </span>
@@ -245,7 +248,7 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <h5>Telefonnummer</h5>
+            <h5>Windows Phone</h5>
 
         </div>
     </div>
@@ -253,61 +256,15 @@
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <p>Ditt telefonnummer lagras hos oss för att vi skall kunna skicka meddelanden till dig, med t.ex. din personliga kod.</p>
+            <p>Vi har inga planer på att göra en app för Windows Phone men du kan <a href="/#contact">anmäla ditt intresse</a> så hör vi av oss om det blir aktuellt.</p>
 
         </div>
     </div>
 <div class="vc_empty_space" style="height: 50px"><span class="vc_empty_space_inner"></span></div>
-</div></div></div><div class="wpb_column vc_column_container vc_col-sm-6 vc_col-lg-3 vc_col-md-6 vc_col-has-fill"><div class="vc_column-inner vc_custom_1461334013405"><div class="wpb_wrapper">    <span class="qodef-icon-animation-holder qodef-icon-animation-show" style="transition-delay: 500ms;-webkit-transition-delay: 500ms;-moz-transition-delay: 500ms;-ms-transition-delay: 500ms">
-
-    <span class="qodef-icon-shortcode circle qodef-icon-animation" style="width: 90px;height: 90px;line-height: 90px;background-color: #4090d0;border-style: solid;border-width: 0px" data-hover-background-color="#979797" data-animation-delay="500" data-hover-color="#ffffff" data-color="#ffffff">
-
-        <i class="qodef-icon-font-awesome fa fa-lock qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
-            </span>
-
-    </span>
-<div class="vc_empty_space" style="height: 41px"><span class="vc_empty_space_inner"></span></div>
-
-    <div class="wpb_text_column wpb_content_element ">
-        <div class="wpb_wrapper">
-            <h5>Sekretess</h5>
-
-        </div>
-    </div>
-<div class="vc_empty_space" style="height: 9px"><span class="vc_empty_space_inner"></span></div>
-
-    <div class="wpb_text_column wpb_content_element ">
-        <div class="wpb_wrapper">
-            <p>Uppgifterna om dig som kund lagras på vår server och delas enbart med tredje part enligt beskrivningen ovan.</p>
-
-        </div>
-    </div>
-    </div>
-    </div>
-    </div>
+</div></div></div>
     <div class="wpb_column vc_column_container vc_col-sm-12 vc_col-lg-12 vc_col-md-12 vc_col-has-fill"><div class="vc_column-inner vc_custom_1461334013405"><div class="wpb_wrapper">    <span class="qodef-icon-animation-holder qodef-icon-animation-show" style="transition-delay: 500ms;-webkit-transition-delay: 500ms;-moz-transition-delay: 500ms;-ms-transition-delay: 500ms">
 
-    <span class="qodef-icon-shortcode circle qodef-icon-animation" style="width: 90px;height: 90px;line-height: 90px;background-color: #4090d0;border-style: solid;border-width: 0px" data-hover-background-color="#979797" data-animation-delay="500" data-hover-color="#ffffff" data-color="#ffffff">
-
-        <i class="qodef-icon-font-awesome fa fa-mobile-phone qodef-icon-element" style="color: #ffffff;font-size:32px"></i>
-            </span>
-
     </span>
-<div class="vc_empty_space" style="height: 41px"><span class="vc_empty_space_inner"></span></div>
-
-    <div class="wpb_text_column wpb_content_element ">
-        <div class="wpb_wrapper">
-            <h5>Lagar och Tvister</h5>
-
-        </div>
-    </div>
-<div class="vc_empty_space" style="height: 9px"><span class="vc_empty_space_inner"></span></div>
-
-    <div class="wpb_text_column wpb_content_element ">
-        <div class="wpb_wrapper">
-            <p>Användningen av din information styrs av Svensk lag. Eventuella tvister sker vid skiljedomstol i Sverige.</p>
-        </div>
-    </div>
 <div class="vc_empty_space" style="height: 50px"><span class="vc_empty_space_inner"></span></div>
 </div></div></div></div></div></div>
 <div class="vc_row wpb_row vc_row-fluid qodef-section qodef-content-aligment-left" style=""><div class="clearfix qodef-full-section-inner">
@@ -316,14 +273,6 @@
 </div>
 </div></div></div>
 <div class="vc_row wpb_row vc_row-fluid qodef-section qodef-content-aligment-center" style="">
-<div class="clearfix qodef-full-section-inner">
-<div class="wpb_column vc_column_container vc_col-sm-12">
-<div class="vc_column-inner ">
-    <div class="wpb_wrapper">
-        <h2>Kontakta oss</h2>
-    </div>
-</div></div></div>
-
 <div data-qodef-anchor="contact" class="vc_row wpb_row vc_row-fluid qodef-section vc_custom_1446821786553 qodef-content-aligment-left qodef-grid-section" style="">
     <div class="clearfix qodef-section-inner">
         <div class="qodef-section-inner-margin clearfix">
@@ -338,34 +287,10 @@
                         <div class="wpb_text_column wpb_content_element ">
                             <div class="wpb_wrapper">
                                 <p>Linefeed AB</p>
-                                <p>c/o Tor-Åke Fransson</p>
                                 <p>Ekbacksvägen 59b</p>
                                 <p>18432 Åkersberga</p>
                             </div>
                         </div>
-                        <div class="vc_empty_space" style="height: 47px">
-                            <span class="vc_empty_space_inner"></span>
-                        </div>
-                        <div class="wpb_text_column wpb_content_element ">
-                            <div class="wpb_wrapper">
-                                <h5>Om du vill komma i kontakt med oss…</h5>
-                            </div>
-                        </div>
-                        <div class="vc_empty_space" style="height: 16px">
-                            <span class="vc_empty_space_inner"></span>
-                        </div>
-                        <div class="wpb_text_column wpb_content_element ">
-                            <div class="wpb_wrapper">
-                                <p>Använd kontaktformuläret nedan</p>
-                            </div>
-                        </div>
-                        <div class="vc_empty_space" style="height: 47px">
-                            <span class="vc_empty_space_inner"></span>
-                        </div>
-
-{% include 'korjournal/contactform.html' %}
-<div class="vc_empty_space" style="height: 40px"><span class="vc_empty_space_inner"></span></div>
-
         </div>
     </div>
 </div></div></div>
@@ -383,7 +308,7 @@
         </div>
         <div class="qodef-column-inner">
             <div id="text-8" class="widget qodef-footer-text widget_text">
-                <div class="textwidget"><a href="privacy-policy.html">Sekretesspolicy</a></div>
+                <div class="textwidget"><a href="/privacy-policy.html">Sekretesspolicy</a></div>
             </div>
         </div>
     </div>
@@ -392,35 +317,8 @@
 
 </div> <!-- close div.qodef-wrapper-inner  -->
 </div> <!-- close div.qodef-wrapper -->
-<script type="text/javascript">
-var recaptchaCallback = function() {
-    var forms = document.getElementsByTagName('form');
-    var pattern = /(^|\s)g-recaptcha(\s|$)/;
 
-    for (var i = 0; i < forms.length; i++) {
-        var divs = forms[i].getElementsByTagName('div');
-
-        for (var j = 0; j < divs.length; j++) {
-            var sitekey = divs[j].getAttribute('data-sitekey');
-
-            if (divs[j].className && divs[j].className.match(pattern) && sitekey) {
-                grecaptcha.render(divs[j], {
-                    'sitekey': sitekey,
-                    'theme': divs[j].getAttribute('data-theme'),
-                    'type': divs[j].getAttribute('data-type'),
-                    'size': divs[j].getAttribute('data-size'),
-                    'tabindex': divs[j].getAttribute('data-tabindex'),
-                    'callback': divs[j].getAttribute('data-callback'),
-                    'expired-callback': divs[j].getAttribute('data-expired-callback')
-                });
-
-                break;
-            }
-        }
-    }
-}
-</script>
-<script type="text/javascript" src="/korjournal/js/jquery.form.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/scripts.js"></script>
 <script type="text/javascript" src="/korjournal/js/core.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/widget.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/tabs.min.js"></script>
@@ -437,6 +335,7 @@ var _wpmejsSettings = {"pluginPath":"\/wp-includes\/js\/mediaelement\/"};
 <script type="text/javascript" src="/korjournal/js/slider.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/third-party.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/isotope.pkgd.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/js"></script>
 <script type="text/javascript">
 /* <![CDATA[ */
 var qodefGlobalVars = {"vars":{"qodefAddForAdminBar":0,"qodefElementAppearAmount":-150,"qodefFinishedMessage":"No more posts","qodefMessage":"Loading new posts...","qodefTopBarHeight":0,"qodefStickyHeaderHeight":0,"qodefStickyHeaderTransparencyHeight":60,"qodefLogoAreaHeight":0,"qodefMenuAreaHeight":100,"qodefStickyHeight":60,"qodefMobileHeaderHeight":100}};
@@ -447,13 +346,37 @@ var qodefPerPageVars = {"vars":{"qodefStickyScrollAmount":0,"qodefHeaderTranspar
 <script type="text/javascript" src="/korjournal/js/comment-reply.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/js_composer_front.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/like.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/wp-embed.min.js"></script>
 
 <div id="ascrail2000" class="nicescroll-rails nicescroll-rails-vr" style="width: 0px; z-index: 9999; cursor: default; position: fixed; top: 0px; left: 1550px; height: 702px; opacity: 1; display: none;"><div class="nicescroll-cursors" style="position: relative; top: 0px; float: right; width: 0px; height: 0px; border: 0px; border-radius: 0px; background-color: transparent; background-clip: padding-box;"></div></div></body></html>
 
-
+<script type="text/javascript" src="/korjournal/js/core.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/widget.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/tabs.min.js"></script>
 <script type="text/javascript" src="/korjournal/js/accordion.min.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var mejsL10n = {"language":"en-US","strings":{"Close":"Close","Fullscreen":"Fullscreen","Download File":"Download File","Download Video":"Download Video","Play\/Pause":"Play\/Pause","Mute Toggle":"Mute Toggle","None":"None","Turn off Fullscreen":"Turn off Fullscreen","Go Fullscreen":"Go Fullscreen","Unmute":"Unmute","Mute":"Mute","Captions\/Subtitles":"Captions\/Subtitles"}};
+var _wpmejsSettings = {"pluginPath":"\/wp-includes\/js\/mediaelement\/"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="/korjournal/js/wp-mediaelement.js"></script>
+<script type="text/javascript" src="/korjournal/js/mouse.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/slider.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/third-party.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/isotope.pkgd.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var qodefGlobalVars = {"vars":{"qodefAddForAdminBar":0,"qodefElementAppearAmount":-150,"qodefFinishedMessage":"No more posts","qodefMessage":"Loading new posts...","qodefTopBarHeight":0,"qodefStickyHeaderHeight":0,"qodefStickyHeaderTransparencyHeight":60,"qodefLogoAreaHeight":0,"qodefMenuAreaHeight":100,"qodefStickyHeight":60,"qodefMobileHeaderHeight":100}};
+var qodefPerPageVars = {"vars":{"qodefStickyScrollAmount":0,"qodefHeaderTransparencyHeight":0}};
+/* ]]> */
+</script>
+<script type="text/javascript" src="/korjournal/js/modules.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/comment-reply.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/js_composer_front.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/like.min.js"></script>
+<script type="text/javascript" src="/korjournal/js/wp-embed.min.js"></script>
 
 <div id="ascrail2000" class="nicescroll-rails nicescroll-rails-vr" style="width: 0px; z-index: 9999; cursor: default; position: fixed; top: 0px; left: 1550px; height: 702px; opacity: 1; display: none;"><div class="nicescroll-cursors" style="position: relative; top: 0px; float: right; width: 0px; height: 0px; border: 0px; border-radius: 0px; background-color: transparent; background-clip: padding-box;">
     

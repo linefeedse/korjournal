@@ -58,3 +58,7 @@ class ContactForm(Form):
     subject = CharField(required=True)
     message = CharField(required=True, widget=Textarea)
     recaptcha = utils_fields.ReCaptchaField()
+
+class ApplinkForm(Form):
+    phone = CharField(error_messages={'incomplete': 'Ange ett mobiltelefonnummer'},
+                      validators=[RegexValidator(r'^[0-9]{9,11}$', 'Ange ett giltigt mobiltelefonnummer')])

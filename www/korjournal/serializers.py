@@ -5,6 +5,7 @@ import requests
 from requests_oauthlib import OAuth1Session
 from os import getenv
 import logging
+from korjournal.utils import sendsms as smsutil
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -54,19 +55,7 @@ class RegisterCodeSerializer(serializers.ModelSerializer):
                 code=validated_data['code'],
                )
         code.save()
-        key = getenv('SMS_GATEWAY_KEY');
-        secret = getenv('SMS_GATEWAY_SECRET');
-        gwapi = OAuth1Session(key, client_secret=secret)
-        req = {
-            'recipients': [{'msisdn': int('46%d' % validated_data['phone'])}],
-            'message': 'Din kod: %d' % validated_data['code'],
-            'sender': 'Körjournal',
-        }
-        res = gwapi.post('https://gatewayapi.com/rest/mtsms', json=req)
-        if (res.status_code != requests.codes.ok):
-            logger = logging.getLogger(__name__)
-            logger.error('Return code %d from sms gateway' % res.status_code)
-            die
+        smsutil.send_sms(validated_data['phone'], 'Din kod: %d' % validated_data['code'])
         return code
 
 class DriverSerializer(serializers.HyperlinkedModelSerializer):

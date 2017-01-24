@@ -32,5 +32,6 @@ urlpatterns = [
     url(r'^vehicles/$', views.vehicles, name='vehicles'),
     url(r'^vehicles/(?P<vehicle_id>[0-9]+)/delete$', views.delete_vehicle, name='delete_vehicle'),
     url(r'^vehicles/(?P<driver_id>[0-9]+)/deletedriver$', views.delete_driver, name='delete_driver'),
+    url(r'^applink', views.applink, name='applink'),
 ]
 

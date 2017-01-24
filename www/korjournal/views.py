@@ -14,7 +14,7 @@ from rest_framework.decorators import api_view, permission_classes
 from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer, DriverSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll, IsDriver
-from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm, ContactForm
+from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm, ContactForm, ApplinkForm
 import copy
 import subprocess
 import sys
@@ -29,6 +29,7 @@ from django.db import IntegrityError
 from django.template import Context
 from django.template.loader import get_template
 from django.core.mail import EmailMessage
+from korjournal.utils import sendsms as smsutil
 
 def make_contactform(request):
 
@@ -272,7 +273,6 @@ def delete_vehicle(request,vehicle_id):
         return HttpResponseRedirect(reverse('vehicles'))
     return vehicles(request)
 
-
 @api_view(('POST',))
 @permission_classes((IsOwner,))
 def delete_driver(request,driver_id):
@@ -282,3 +282,21 @@ def delete_driver(request,driver_id):
         driver.delete()
         return HttpResponseRedirect(reverse('vehicles'))
     return vehicles(request)
+
+def send_applink(phone):
+    smsutil.send_sms(phone, "Kilometerkoll på Google Play store klicka här: http://play.google.com/store/apps/details?id=se.linefeed.korjournal")
+
+def applink(request):
+    baseurl_host = request.get_host()
+    navigation1 = { "link": '/register/', "text": 'Registrera',}
+    navigation2 = { "link": '/login/', "text": 'Logga in'}
+
+    if request.method == 'POST':
+        form = ApplinkForm(request.POST)
+        if form.is_valid():
+            phone = form.cleaned_data['phone']
+            send_applink(phone)
+        return render(request, 'korjournal/app.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2, 'form': form})
+
+    form = ApplinkForm()
+    return render(request, 'korjournal/app.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2, 'form': form})
