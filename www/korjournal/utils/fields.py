@@ -16,10 +16,9 @@ class ReCaptchaField(forms.CharField):
         self.required = True
         super(ReCaptchaField, self).__init__(*args, **kwargs)
 
-    def clean(self, values):
-        super(ReCaptchaField, self).clean(values[1])
-        recaptcha_challenge_value = smart_text(values[0])
-        recaptcha_response_value = smart_text(values[1])
+    def clean(self, value):
+        super(ReCaptchaField, self).clean(value)
+        recaptcha_response_value = smart_text(value)
         
         """ Submits a reCAPTCHA request for verification. Returns a 
         RecaptchaResponse object containing info if the request 
@@ -42,8 +41,7 @@ class ReCaptchaField(forms.CharField):
         - RecaptchaResponse.is_valid == False if failure.
             - RecaptchaResponse.error_code will also be set.
         """
-        check_captcha = captcha.submit(recaptcha_challenge_value, 
-            recaptcha_response_value, settings.RECAPTCHA_PRIVATE_KEY, None, True, 15)
+        check_captcha = captcha.submit(recaptcha_response_value, settings.RECAPTCHA_PRIVATE_KEY, None, True, 15)
         if not check_captcha.is_valid:
             raise forms.ValidationError(self.error_messages['captcha_invalid'])
-        return values[0]
+        return value

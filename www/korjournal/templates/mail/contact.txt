@@ -1,11 +1,11 @@
-Contact Name:
+Namn:
 {{ name }}
 
-Email:
+E-post:
 {{ email }}
 
-Subject:
+Ärende:
 {{ subject|safe|striptags }}
 
-Content:
+Meddelande:
 {{ message|safe|striptags }}

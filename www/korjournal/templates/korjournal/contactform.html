@@ -12,7 +12,7 @@
 	<input id="id_email" name="email" type="text" class="contactform-text" value="{{ contactform.data.email }}">
 	
 	<p><label for="id_subject" class="{% if contactform.errors.subject %}alert-danger{% endif %}">
-		Ärende: (måste anges)
+		Ärende: (måste anges) Om du har registrerat ett telefonnummer, ange det här.
 	</label></p>
 	<input id="id_subject" name="subject" type="text" class="contactform-text" value="{{ contactform.data.subject }}">
 	

@@ -30,7 +30,12 @@ from django.template import Context
 from django.template.loader import get_template
 from django.core.mail import EmailMessage
 
-def handle_contactform(request,form):
+def make_contactform(request):
+
+    if request.method != 'POST':
+        return ContactForm()
+
+    form = ContactForm(data=request.POST)
     if form.is_valid():
         name = form.cleaned_data['name']
         email = form.cleaned_data['email']
@@ -55,7 +60,6 @@ def handle_contactform(request,form):
         emailMessage.send()
         form.add_error('message', "Meddelandet har skickats")
         return form
-
     form.add_error('recaptcha', "Formuläret var inte giltigt")
     return form
 
@@ -68,7 +72,8 @@ def landing(request):
     navigation2 = {}
     navigation2['link'] =  '/login/'
     navigation2['text'] = 'Logga in'
-    return render(request, 'korjournal/landing.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2})
+    contactform = make_contactform(request)
+    return render(request, 'korjournal/landing.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2, 'contactform': contactform})
 
 def privacy_policy(request):
     baseurl_host = request.get_host()
@@ -78,13 +83,8 @@ def privacy_policy(request):
     navigation2 = {}
     navigation2['link'] =  '/login/'
     navigation2['text'] = 'Logga in'
-    alert = ""
-    if request.method == 'POST':
-        contactform = ContactForm(data=request.POST) 
-        contactform = handle_contactform(request, contactform)
-    else:
-        contactform = ContactForm()
-    return render(request, 'korjournal/privacy-policy.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2, 'alert': alert, 'contactform': contactform})
+    contactform = make_contactform(request)
+    return render(request, 'korjournal/privacy-policy.html', {'baseurl_host': baseurl_host, 'navigation1': navigation1, 'navigation2': navigation2, 'contactform': contactform})
 
 @login_required(login_url='/login')
 def profile(request):
