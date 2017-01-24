@@ -1,3 +1,4 @@
+<h5>Kontaktformulär</h5>
 <form role="form" action="" method="post">
     {% csrf_token %}
 
@@ -18,7 +19,7 @@
 	
 	<p><label for="id_message">Meddelande:</label></p>
 	<textarea cols="40" id="id_message" name="message" rows="10" class="contactform-text">{{ contactform.cleaned_data.message }}</textarea>
-    {{ contactform.recaptcha }} <input type="submit" class="contactform-submit"></input>
+    {{ contactform.recaptcha }} <input type="submit" class="contactform-submit" value="Skicka"></input>
       <span class="alert alert-danger">
       {% if contactform.errors.message %}
           {{ contactform.errors.message|join:', ' }}
