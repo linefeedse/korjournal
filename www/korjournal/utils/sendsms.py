@@ -12,9 +12,9 @@ def send_sms(phone, message):
         'message': message,
         'sender': 'KmKoll',
     }
-    # res = gwapi.post('https://gatewayapi.com/rest/mtsms', json=req)
+    res = gwapi.post('https://gatewayapi.com/rest/mtsms', json=req)
     logger = logging.getLogger(__name__)
-    # if (res.status_code != requests.codes.ok):
-    #     logger.error('Return code %d from sms gateway' % res.status_code)
-    #     die
+    if (res.status_code != requests.codes.ok):
+        logger.error('Return code %d from sms gateway' % res.status_code)
+        die
     logger.error(u"""Sent message "%(msg)s" to %(phone)d""" % { "msg": message.encode('utf-8'), "phone": int(phone)})
