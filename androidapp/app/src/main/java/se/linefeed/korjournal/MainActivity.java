@@ -212,8 +212,12 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(intent);
     }
 
-    private void onRequestResponse(String msg) {
+    private void setStatusText(String msg) {
         statusText.setText(msg);
+    }
+
+    private void onRequestResponse(String msg) {
+        setStatusText(msg);
         odometerText.setText("");
         odometerSend.setText("Skicka");
         odometerSend.setClickable(true);
@@ -378,6 +382,7 @@ public class MainActivity extends AppCompatActivity implements
 
         vehicleArr.clear();
         myVehicles.clear();
+        setStatusText("Hämtar fordon...");
         mApi.get_vehicles(myVehicles,
                 new KorjournalAPIInterface() {
                     @Override
@@ -387,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements
                         }
                         vehicleSpinnerAdapter.notifyDataSetChanged();
                         setSelectedVehicle();
+                        setStatusText("Klar!");
                     }
                     @Override
                     public void error(String e) {
@@ -411,6 +417,7 @@ public class MainActivity extends AppCompatActivity implements
     private void requestOdosnaps() {
 
         odoSnapArr.clear();
+        setStatusText("Hämtar tidigare resor");
         mApi.get_odosnaps(odoSnapArr,
                 new KorjournalAPIInterface() {
                     @Override
@@ -493,6 +500,7 @@ public class MainActivity extends AppCompatActivity implements
         odometerSend.setClickable(false);
 
         sendProgress.setProgress(30);
+        setStatusText("Skickar mätarställning...");
         mApi.send_odometersnap(vehicleUrl,
                 odometer,
                 mLocation,
@@ -505,7 +513,7 @@ public class MainActivity extends AppCompatActivity implements
                     public void onResponse(JSONObject response) {
                         try {
                             String odolink = response.get("url").toString();
-                            onRequestResponse("Sparat!");
+                            onRequestResponse("Skickat!");
                             sendProgress.setProgress(50);
                             sendImageForOdo(odolink);
                         }
@@ -526,6 +534,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void sendImageForOdo(final String linkedOdo) {
+        setStatusText("Skickar bild...");
         mApi.send_odoimage(odoImageFile,linkedOdo, new Response.Listener<NetworkResponse>() {
             @Override
             public void onResponse(NetworkResponse response) {
@@ -537,10 +546,12 @@ public class MainActivity extends AppCompatActivity implements
                     sendProgress.setProgress(99);
                     Log.i("INFO", "Successfully uploaded imagefile: " + imagefile);
                     File file = new File(odoImageFile);
+                    setStatusText("Raderar bild...");
                     if (file.exists()) {
                         file.delete();
                     }
                     loadLastOdoImage();
+                    setStatusText("Mätarställning har skickats");
                     sendProgress.setProgress(0);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -574,6 +585,23 @@ public class MainActivity extends AppCompatActivity implements
                 error.printStackTrace();
             }
         });
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int progress = sendProgress.getProgress();
+                if (progress > 49 && progress < 79)
+                    sendProgress.setProgress(progress + 20);
+            }
+        }, 1500);
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                int progress = sendProgress.getProgress();
+                if (progress > 69 && progress < 79)
+                    sendProgress.setProgress(progress + 20);
+            }
+        }, 4000);
     }
 
     @Override

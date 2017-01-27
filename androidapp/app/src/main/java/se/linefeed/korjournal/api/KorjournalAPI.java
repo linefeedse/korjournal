@@ -8,6 +8,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -42,7 +43,7 @@ public class KorjournalAPI {
     private String username;
     private String password;
     private Context mContext;
-    private final String base_url = "http://korjournal.linefeed.se";
+    private final String base_url = "http://kilometerkoll.se";
 
     private HashMap<String,String> getAuthorizationHeaders() {
         HashMap<String, String> headers = new HashMap<String, String>();
@@ -165,6 +166,11 @@ public class KorjournalAPI {
                 return getAuthorizationHeaders();
             };
         };
+
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                50000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         mRequestQueue.add(request);
     }

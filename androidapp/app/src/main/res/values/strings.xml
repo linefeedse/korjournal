@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Körjournal</string>
 
-    <string name="url">http://korjournal.linefeed.se</string>
+    <string name="url">http://kilometerkoll.se</string>
 
     <string name="title_activity_camera">Vägmätare</string>
     <string name="dummy_button">Dummy Button</string>

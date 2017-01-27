@@ -58,7 +58,7 @@ public class TripListActivity extends AppCompatActivity {
         linkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View parent) {
-                String url = "http://korjournal.linefeed.se/editor/";
+                String url = "http://kilometerkoll.se/editor/";
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse(url));
                 startActivity(intent);
