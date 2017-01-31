@@ -2,9 +2,10 @@
 
 dockerhost=$(ip addr list docker0 | sed -n 's,.*inet \([^/]*\)/.*,\1,p')
 dockerhn=vagrant
+mkdir -p {{ webapp_logroot }}
 docker pull linefeedse/korjournal:latest
 docker tag -f linefeedse/korjournal:latest korjournal:latest
 docker kill korjournal 2>/dev/null||true
 docker rm korjournal 2>/dev/null||true
-docker run --name=korjournal --hostname=korjournal --restart=always -d -v {{ webapp_mediaroot }}:/vagrant/www/media --env-file=/etc/docker/envfile.txt -e 80 -p 80:80 --add-host=db:$dockerhost korjournal:latest
+docker run --name=korjournal --hostname=korjournal --restart=always -d -v {{ webapp_mediaroot }}:/vagrant/www/media -v {{ webapp_logroot }}:/var/log/nginx --env-file=/etc/docker/envfile.txt -e 80 -p 80:80 --add-host=db:$dockerhost korjournal:latest
 docker exec korjournal bash -c '( cd /vagrant/www; ./manage.py migrate )'
