@@ -11,6 +11,8 @@ div.editor-odometer-image-wrapper {
 	border: 1px solid lightgray;
 	border-radius: 3px;
 	text-align: center;
+	padding-left: 0px;
+	padding-right: 0px;
 }
 
 tr.editor-table-header {
