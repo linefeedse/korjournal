@@ -284,7 +284,7 @@ def delete_driver(request,driver_id):
     return vehicles(request)
 
 def send_applink(phone):
-    smsutil.send_sms(phone, "Kilometerkoll på Google Play store klicka här: http://play.google.com/store/apps/details?id=se.linefeed.korjournal")
+    smsutil.send_sms(phone, "Kilometerkoll för iPhone: https://itunes.apple.com/se/app/kilometerkoll/id1202196220?mt=8 Android: http://play.google.com/store/apps/details?id=se.linefeed.korjournal")
 
 def applink(request):
     baseurl_host = request.get_host()
