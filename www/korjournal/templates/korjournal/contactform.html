@@ -18,7 +18,7 @@
 	<input id="id_subject" name="subject" type="text" class="contactform-text" value="{{ contactform.data.subject }}">
 	
 	<p><label for="id_message">Meddelande:</label></p>
-	<textarea cols="40" id="id_message" name="message" rows="10" class="contactform-text">{{ contactform.cleaned_data.message }}</textarea>
+	<textarea cols="40" id="id_message" name="message" rows="5" class="contactform-text">{{ contactform.cleaned_data.message }}</textarea>
     {{ contactform.recaptcha }} <input type="submit" class="contactform-submit" value="Skicka"></input>
       <span class="alert alert-danger">
       {% if contactform.errors.message %}

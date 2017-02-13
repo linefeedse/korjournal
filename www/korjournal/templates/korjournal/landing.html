@@ -63,6 +63,14 @@ img.emoji {
 <style type="text/css" data-type="vc_shortcodes-custom-css">.vc_custom_1461334064945{padding-top: 0px !important;padding-bottom: 71px !important;background-color: #ffffff !important;}.vc_custom_1446820631809{padding-bottom: 42px !important;background-color: #ffffff !important;}.vc_custom_1461685624071{padding-top: 73px !important;padding-bottom: 89px !important;}.vc_custom_1446820997091{padding-top: 93px !important;padding-bottom: 47px !important;}.vc_custom_1446821746836{padding-top: 82px !important;padding-bottom: 90px !important;background-color: #f6f6f6 !important;}.vc_custom_1446821124073{padding-top: 76px !important;padding-bottom: 72px !important;}.vc_custom_1446821129913{padding-bottom: 73px !important;background-position: center !important;background-repeat: no-repeat !important;background-size: cover !important;}.vc_custom_1446816513166{background-color: #ffffff !important;}.vc_custom_1461685652762{padding-top: 93px !important;padding-bottom: 107px !important;}.vc_custom_1446821786553{padding-top: 56px !important;padding-bottom: 43px !important;}.vc_custom_1461333530948{background-color: #ffffff !important;}.vc_custom_1461333975169{background-color: #ffffff !important;}.vc_custom_1461333991509{background-color: #ffffff !important;}.vc_custom_1461334013405{background-color: #ffffff !important;}.vc_custom_1445413182400{margin-bottom: -51px !important;}.vc_custom_1461585664280{padding-right: 12% !important;padding-left: 12% !important;}</style><noscript><style type="text/css"> .wpb_animate_when_almost_visible { opacity: 1; }.vc_custom_process_title{color: #f5f5f5;}</style></noscript></head>
 
 <body class="home page page-id-5 page-template page-template-full-width page-template-full-width-php qode-core-1.0 startit-ver-1.3 qodef-smooth-scroll  qodef-header-standard qodef-sticky-header-on-scroll-down-up qodef-default-mobile-header qodef-sticky-up-mobile-header qodef-dropdown-default qodef-light-header qodef-search-covers-header qodef-side-menu-slide-with-content qodef-width-270 wpb-js-composer js-comp-ver-4.11.1 vc_responsive">
+<div id="fb-root"></div>
+<script>(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/sv_SE/sdk.js#xfbml=1&version=v2.8";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
 <header class="qodef-page-header">
     <div class="qodef-menu-area" style="background-color:rgba(255, 255, 255, 0)">
             <div class="qodef-vertical-align-containers">
@@ -353,10 +361,10 @@ img.emoji {
     </div>
     <div class="qodef-process-item-content-holder">
         <div class="qodef-process-item-title-holder">
-            <h5 style="color: white;">Inhämtning</h5>
+            <h5 style="color: white;">I bilen</h5>
         </div>
         <div class="qodef-process-item-text-holder">
-            <p>När en resa påbörjas eller avslutas öppnar föraren vår app i sin smartphone. Appen sparar automatiskt adressen, klockslaget och mätarställningen. Föraren anger resans syfte - detta kommer appen ihåg och ger smarta förslag på syfte nästa gång.</p>
+            <p>När en resa påbörjas eller avslutas öppnar du appen i din smartphone. Appen sparar automatiskt adressen, klockslaget och en bild på mätarställningen. Anger du resans syfte kommer appen ihåg det och ger smarta förslag på syfte nästa gång.</p>
         </div>
     </div>
 </div><div class="qodef-process-item">
@@ -394,10 +402,10 @@ img.emoji {
     </div>
     <div class="qodef-process-item-content-holder">
         <div class="qodef-process-item-title-holder">
-            <h5 style="color: white;">Komplettering</h5>
+            <h5 style="color: white;">I datorn</h5>
         </div>
         <div class="qodef-process-item-text-holder">
-            <p>Du kan se och redigera reserapporterna i webtjänsten. Om föraren har glömt att avsluta en resa eller matat in fel uppgifter så kan du se och korrigera det här.</p>
+            <p>Du kan se och redigera reserapporterna i webtjänsten. Du kan lägga till flera förare med olika telefonnummer på samma fordon. Om föraren har glömt att avsluta en resa eller matat in fel uppgifter så kan du se och korrigera det här.</p>
         </div>
     </div>
 </div><div class="qodef-process-item">
@@ -444,22 +452,22 @@ img.emoji {
     </div>
     <div class="wpb_text_column wpb_content_element  vc_custom_1465288691832">
         <div class="wpb_wrapper">
-            <h4><span style="color: #000000;">Fyll i telefonnumret till din smartphone här för att skicka en länk till appen: </span></h4>
+            <h4><span style="color: #000000; margin: 20px;">Appen Kilometerkoll innehåller allt du behöver för att komma igång.</span></h4>
+            <a href="/app/appstore"><img src="static/Download_on_the_App_Store_Badge_US-UK_135x40.svg" style="margin: 10px 5px;"/></a>
+            <a href="/app/googleplay"><img src="static/google-play-badge.png" width="154"/></a>
+            <h4><span style="color: #000000; margin: 20px;">Du kan också fylla i telefonnumret till din smartphone här för att skicka en länk till appen: </span></h4>
                 <form action="/applink/" method="post" class="form-horizontal" role="form">
                     {% csrf_token %}
                 <div class="form-group" style="margin-top: 20px;">
                     <div class="col-sm-12 ">
                         <label for="id_phone" class="applinkform-label">+46</label>
                         <input id="id_phone" name="phone" type="text" class="applinkform-text"/>
-                        <input type="submit" class="applinkform-submit" value="Skicka"></input>
+                        <input type="submit" class="applinkform-submit" value="Skicka" style="padding: 8px 10px;"></input>
                     </div>
                 </div>
                 </form>
-            <h4 style="color: #000000; margin-top: 20px;">Du kan också gå till denna sida för att registrera dig via datorn: <a href="/register/">kilometerkoll.se/register/</a></h4>
-            Appen kan du hitta i din app store, sök på Kilometerkoll
         </div>
     </div>
-<div class="vc_empty_space" style="height: 35px"><span class="vc_empty_space_inner"></span></div>
 </div></div></div></div></div></div><div data-qodef-anchor="contact" class="vc_row wpb_row vc_row-fluid qodef-section vc_custom_1446821786553 qodef-content-aligment-left qodef-grid-section" style=""><div class="clearfix qodef-section-inner">
 <div class="qodef-section-inner-margin clearfix"><div class="wpb_column vc_column_container vc_col-sm-12 vc_col-lg-6 vc_col-md-6"><div class="vc_column-inner "><div class="wpb_wrapper">
     <div class="wpb_text_column wpb_content_element ">
@@ -475,7 +483,7 @@ img.emoji {
 <div class="wpb_column vc_column_container vc_col-sm-12 vc_col-lg-6 vc_col-md-6"><div class="vc_column-inner "><div class="wpb_wrapper">
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <h5>Om du vill komma i kontakt med oss…</h5>
+            <h5 style="margin-bottom: 20px;">Om du vill komma i kontakt med oss…</h5>
 
         </div>
     </div>
@@ -483,11 +491,12 @@ img.emoji {
 
     <div class="wpb_text_column wpb_content_element ">
         <div class="wpb_wrapper">
-            <p>Använd kontaktformuläret eller hitta Kilometerkoll på Facebook.</p>
+            <p style="margin-bottom: 20px;">Använd kontaktformuläret eller Facebook:</p>
+            <div class="fb-page" data-href="https://www.facebook.com/kilometerkoll/" data-tabs="messages, timeline" data-height="300" data-width="260" data-small-header="true" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true"><blockquote cite="https://www.facebook.com/kilometerkoll/" class="fb-xfbml-parse-ignore"><a href="https://www.facebook.com/kilometerkoll/">Kilometerkoll.se</a></blockquote></div>
 
         </div>
     </div>
-<div class="vc_empty_space" style="height: 47px"><span class="vc_empty_space_inner"></span></div>
+<div class="vc_empty_space" style="height: 67px"><span class="vc_empty_space_inner"></span></div>
 <div class="vc_row wpb_row vc_inner vc_row-fluid qodef-section qodef-content-aligment-left" style="">
     <div class="qodef-full-section-inner">
         <div class="wpb_column vc_column_container vc_col-sm-12 vc_col-md-6">
