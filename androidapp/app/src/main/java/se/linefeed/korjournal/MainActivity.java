@@ -64,6 +64,8 @@ import se.linefeed.korjournal.api.KorjournalAPIInterface;
 import se.linefeed.korjournal.models.OdometerSnap;
 import se.linefeed.korjournal.models.Position;
 import se.linefeed.korjournal.models.Vehicle;
+import se.linefeed.korjournal.models.VehicleList;
+
 
 public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -77,12 +79,9 @@ public class MainActivity extends AppCompatActivity implements
     private ImageButton cameraButton;
     private EditText odometerText;
     private RequestQueue requestQueue = null;
+    private VehicleList vehicleList = null;
     private Spinner vehicleSpinner;
-    private ArrayList<String> vehicleArr;
     private ArrayList<OdometerSnap> odoSnapArr;
-    private ArrayAdapter<String> vehicleSpinnerAdapter;
-    private String vehicleSelected = null;
-    private HashMap<String, Vehicle> myVehicles;
     private GoogleApiClient mGoogleApiClient;
     private final String TAG = "MainActivity";
     private Location mLocation = null;
@@ -97,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements
     private ArrayList<String> reasons;
     private ArrayAdapter<String> reasonSuggestionAdapter;
 
+    private final int flash_color = 0xFFEE3030;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         LocationRequest mLocationRequest;
@@ -120,18 +120,15 @@ public class MainActivity extends AppCompatActivity implements
         odometerText = (EditText) findViewById(R.id.odometerText);
         odometerText.setSelectAllOnFocus(true);
         vehicleSpinner = (Spinner) findViewById(R.id.vehicleSpinner);
-        vehicleArr = new ArrayList<String>();
+        vehicleList = new VehicleList(getApplicationContext(),
+                R.layout.my_spinner_item,
+                vehicleSpinner);
         odoSnapArr = new ArrayList<OdometerSnap>();
         reasons = new ArrayList<String>();
         reasonSuggestionAdapter = new ArrayAdapter<String>(getApplicationContext(),
                 R.layout.my_dropdown_item_1line,
                 reasons);
         reasonText.setAdapter(reasonSuggestionAdapter);
-        vehicleSpinnerAdapter = new ArrayAdapter<String>(getApplicationContext(),
-                R.layout.my_spinner_item,
-                vehicleArr);
-        myVehicles = new HashMap<String, Vehicle>();
-        vehicleSpinner.setAdapter(vehicleSpinnerAdapter);
         sendProgress = (ProgressBar) findViewById(R.id.progressBar);
         odoImage = (ImageView) findViewById(R.id.odoImageView);
         deletePicButton = (ImageButton) findViewById(R.id.picturedeletebtn);
@@ -156,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(this);
         }
-        requestVehicles();
+        vehicleList.request(mApi, statusText, sharedPreferences);
         requestOdosnaps();
         Thread thread = new Thread() {
             @Override
@@ -189,15 +186,13 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        setSelectedVehicle();
+        vehicleList.resetSelected(sharedPreferences);
         mGoogleApiClient.connect();
     }
 
     @Override
     protected void onPause() {
-        if (vehicleSpinner.getSelectedItem() != null) {
-            vehicleSelected = vehicleSpinner.getSelectedItem().toString();
-        }
+        vehicleList.saveSelected();
         super.onPause();
         if (mGoogleApiClient.isConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
@@ -207,7 +202,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void startCameraActivity() {
-        vehicleSelected = vehicleSpinner.getSelectedItem().toString();
         Intent intent = new Intent(this, CameraActivity.class);
         startActivity(intent);
     }
@@ -269,7 +263,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private boolean checkSelections() {
-        final int flash_color = 0xFFEE3030;
         final int transparent = 0x00000000;
         if (!radioIsStartButton.isChecked() && !radioIsEndButton.isChecked()) {
            final RadioGroup startEndRadioGroup = (RadioGroup) findViewById(R.id.startEndRadioGroup);
@@ -304,15 +297,8 @@ public class MainActivity extends AppCompatActivity implements
             }, 300);
             return false;
         }
-        if (myVehicles == null || myVehicles.get(vehicleSpinner.getSelectedItem().toString()) == null) {
-            vehicleSpinner.setBackgroundColor(flash_color);
-            final Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    vehicleSpinner.setBackgroundColor(transparent);
-                }
-            }, 300);
+        if (vehicleList.getSelectedVehicle() == null) {
+            vehicleList.flashSpinner(flash_color);
             return false;
         }
         return true;
@@ -378,42 +364,6 @@ public class MainActivity extends AppCompatActivity implements
         reasonSuggestionAdapter.notifyDataSetChanged();
     }
 
-    private void requestVehicles() {
-
-        vehicleArr.clear();
-        myVehicles.clear();
-        setStatusText("Hämtar fordon...");
-        mApi.get_vehicles(myVehicles,
-                new KorjournalAPIInterface() {
-                    @Override
-                    public void done() {
-                        for (String vName: myVehicles.keySet()) {
-                            vehicleArr.add(vName);
-                        }
-                        vehicleSpinnerAdapter.notifyDataSetChanged();
-                        setSelectedVehicle();
-                        setStatusText("Klar!");
-                    }
-                    @Override
-                    public void error(String e) {
-                        onRequestResponse(e);
-                        vehicleArr.add("Fel: inga fordon!");
-                        vehicleSpinnerAdapter.notifyDataSetChanged();
-                    }
-
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        vehicleArr.add("Fel: inga fordon!");
-                        onRequestResponse("Fel: inga fordon!");
-                        vehicleSpinnerAdapter.notifyDataSetChanged();
-                    }
-                }
-        );
-        vehicleSpinnerAdapter.notifyDataSetChanged();
-    }
-
     private void requestOdosnaps() {
 
         odoSnapArr.clear();
@@ -446,46 +396,14 @@ public class MainActivity extends AppCompatActivity implements
                 }
         );
     }
-    /**
-     * Set the selected vehicle according to logic:
-     * If we have a previous selection and pauses/rotates device, use that
-     * If we have no previous selection, and there is config for preselect, use that
-     * Else, we do nothing and it will just be the first item whatever that is.
-     */
-    private void setSelectedVehicle() {
-        if (vehicleSelected != null) {
-            boolean vehicleSelectedIsValid = false;
-            for (int i=0;i<vehicleArr.size();i++) {
-                if (vehicleSelected.equals(vehicleArr.get(i))) {
-                    vehicleSpinner.setSelection(i);
-                    vehicleSelectedIsValid = true;
-                    break;
-                }
-            }
-            if (!vehicleSelectedIsValid && vehicleArr.size() > 1) {
-                vehicleSelected = null;
-            }
-        } else {
-            String prefVehicleUrl = sharedPreferences.getString("vehicle_list","");
-            if (!prefVehicleUrl.equals("")) {
-                for (String vName : myVehicles.keySet()) {
-                    if (myVehicles.get(vName).getUrl().equals(prefVehicleUrl)) {
-                        for (int i=0;i<vehicleArr.size();i++) {
-                            if (vName.equals(vehicleArr.get(i))) {
-                                vehicleSpinner.setSelection(i);
-                                vehicleSelected = vName;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     private void sendOdometersnap() {
 
-        String vehicleUrl = myVehicles.get(vehicleSpinner.getSelectedItem().toString()).getUrl();
+        if (vehicleList.getSelectedVehicle() == null) {
+            vehicleList.flashSpinner(flash_color);
+            return;
+        }
+        String vehicleUrl = vehicleList.getSelectedVehicle().getUrl();
         String odometer = odometerText.getText().toString();
         try {
             if (Integer.valueOf(odometer) < 1) {
@@ -656,8 +574,12 @@ public class MainActivity extends AppCompatActivity implements
                 showSettings();
                 return true;
             case R.id.action_tripview:
+                if (vehicleList.getSelectedVehicle() == null) {
+                    vehicleList.flashSpinner(flash_color);
+                    return false;
+                }
                 intent = new Intent(this, TripListActivity.class);
-                String vehicleUrl = myVehicles.get(vehicleSpinner.getSelectedItem().toString()).getUrl();
+                String vehicleUrl = vehicleList.getSelectedVehicle().getUrl();
                 intent.putExtra("vehicleUrl", vehicleUrl);
                 startActivity(intent);
             default:
