@@ -13,7 +13,6 @@ import android.preference.PreferenceActivity;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
@@ -26,8 +25,6 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -266,7 +263,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     .getString(usernamePreference.getKey(),"");
             api.tryRegisterCode(phone, newCode, new KorjournalAPIInterface() {
                 @Override
-                public void done() {
+                public void done(JSONObject response) {
                     codeText.setSummary("OK!");
                 }
 
@@ -352,7 +349,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             mApi.get_vehicles(vehicles,
                     new KorjournalAPIInterface() {
                         @Override
-                        public void done() {
+                        public void done(JSONObject response) {
                             for (String vName: vehicles.keySet()) {
                                 vehiclenames.add(vName);
                                 vehicleids.add(vehicles.get(vName).getUrl());

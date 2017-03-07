@@ -1,16 +1,23 @@
 package se.linefeed.korjournal.models;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
+
+import se.linefeed.korjournal.DatabaseOpenHelper;
+import se.linefeed.korjournal.api.KorjournalAPI;
+import se.linefeed.korjournal.api.KorjournalAPIInterface;
 
 public class OdometerSnap {
 
@@ -22,6 +29,8 @@ public class OdometerSnap {
     private boolean isStart;
     private boolean isEnd;
     private String when;
+    private String picturePath;
+    private String url;
 
     /**
      * Default Constructor
@@ -38,16 +47,16 @@ public class OdometerSnap {
     }
 
     /**
-     *
-     * @param vehicle
+     *  @param vehicle
      * @param odometer
      * @param position
      * @param streetAddress
      * @param reason
      * @param isStart
      * @param isEnd
+     * @param picturePath
      */
-    public OdometerSnap(String vehicle, int odometer, Position position, String streetAddress, String reason, boolean isStart, boolean isEnd) {
+    public OdometerSnap(String vehicle, int odometer, Position position, String streetAddress, String reason, boolean isStart, boolean isEnd, String picturePath) {
         this.vehicle = vehicle;
         this.odometer = odometer;
         this.position = position;
@@ -55,6 +64,8 @@ public class OdometerSnap {
         this.reason = reason;
         this.isStart = isStart;
         this.isEnd = isEnd;
+        this.picturePath = picturePath;
+        this.url = null;
     }
 
     public OdometerSnap(Cursor dbCursor) {
@@ -111,6 +122,11 @@ public class OdometerSnap {
         } else {
             when = null;
         }
+        if (dbCursor.getColumnIndex("picturePath") > -1) {
+            picturePath = dbCursor.getString(dbCursor.getColumnIndex("picturePath"));
+        } else {
+            picturePath = null;
+        }
     }
 
     /**
@@ -131,6 +147,42 @@ public class OdometerSnap {
         position = new Position(poslat, poslon);
         reason = jsonObject.getString("why");
         return this;
+    }
+
+    public String toJSON() {
+        String json = "{ \"vehicle\": \"" + vehicle +
+                "\", \"odometer\": \"" + odometer + "\"";
+        if (position != null) {
+            json = json.concat(String.format(Locale.US, ", \"poslat\": \"%f\", \"poslon\": \"%f\"",
+                    position.getPoslat(),
+                    position.getPoslong()));
+        }
+        if (streetAddress != null) {
+            json = json.concat(String.format(Locale.getDefault(),
+                    ", \"where\": \"%s\"",
+                    streetAddress.replace("\"","''")));
+        }
+        if (reason != null && !reason.equals("")) {
+            json = json.concat(String.format(Locale.getDefault(),
+                    ", \"why\": \"%s\"",
+                    reason.replace("\"","''")));
+        }
+        if (isStart) {
+            json = json.concat(String.format(Locale.getDefault(),
+                    ", \"type\": \"%d\"",
+                    1));
+        }
+        if (isEnd) {
+            json = json.concat(String.format(Locale.getDefault(),
+                    ", \"type\": \"%d\"",
+                    2));
+        }
+        if (when != null && !when.equals("")) {
+            json = json.concat(String.format(Locale.getDefault(),
+                    ", \"when\": \"%s\"",
+                    when.replace("\"","''")));
+        }
+        return json.concat(" }");
     }
 
     public String getVehicle() {
@@ -169,6 +221,17 @@ public class OdometerSnap {
         this.streetAddress = streetAddress;
     }
 
+    /**
+     * updateStreetAddress must not run on the GUI thread.
+     * @param context
+     */
+    public void updateStreetAddress(Context context) {
+        String newStreetAddress = position.getStreetAddress(context);
+        if (newStreetAddress == null || newStreetAddress.equals("")) {
+            return;
+        }
+        setStreetAddress(newStreetAddress);
+    }
     public String getWhen() {
         return when;
     }
@@ -186,8 +249,8 @@ public class OdometerSnap {
         this.when = when;
     }
 
-    public void insertDb(SQLiteDatabase db) {
-        ContentValues contentValues = new ContentValues(10);
+    public void insertDb(SQLiteDatabase db, String dbTable) {
+        ContentValues contentValues = new ContentValues(11);
 
         contentValues.put("vehicle", getVehicle());
         contentValues.put("odometer", getOdometer());
@@ -197,7 +260,8 @@ public class OdometerSnap {
         contentValues.put("why", getReason());
         contentValues.put("start_end", ( isStart ? 1 : 2 ));
         contentValues.put("occurred", getWhen());
-        db.insert("OdoSnaps", null, contentValues);
+        contentValues.put("picturePath", getPicturePath());
+        db.insert(dbTable, null, contentValues);
     }
 
     public Boolean isStart() {
@@ -206,5 +270,40 @@ public class OdometerSnap {
 
     public Boolean isEnd() {
         return this.isEnd;
+    }
+
+    public String getPicturePath() {
+        return picturePath;
+    }
+
+    public void setPicturePath(String picturePath) {
+        this.picturePath = picturePath;
+    }
+
+    public void deletePicture() {
+        File file = new File(picturePath);
+        if (file.exists()) {
+            file.delete();
+        }
+        picturePath = null;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public void sendApi(KorjournalAPI korjournalAPI, KorjournalAPIInterface done) {
+        korjournalAPI.send_odometersnap(this, done);
+    }
+    public void sendImage(KorjournalAPI korjournalAPI, KorjournalAPIInterface done) {
+        if (picturePath == null)
+            return;
+        korjournalAPI.send_odoimage(this.getPicturePath(),
+                this.getUrl(),
+                done);
     }
 }

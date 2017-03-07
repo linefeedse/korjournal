@@ -64,10 +64,14 @@ public class CameraActivity extends AppCompatActivity {
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
-        // Trigger the initial hide() shortly after the activity has been
-        // created, to briefly hint to the user that UI controls
-        // are available.
+        Camera.Parameters params = mCamera.getParameters();
+        if (params.getSupportedFocusModes().contains(
+                Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+            mCamera.setParameters(params);
+        }
     }
+
     Camera.PictureCallback rawCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -76,6 +80,7 @@ public class CameraActivity extends AppCompatActivity {
             //finish();
         }
     };
+
     Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {

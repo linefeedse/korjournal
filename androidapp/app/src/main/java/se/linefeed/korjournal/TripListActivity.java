@@ -81,7 +81,8 @@ public class TripListActivity extends AppCompatActivity {
         String having = null;
         String selection = "vehicle = '" + vehicleUrl + "'";
 
-        Cursor cursor = db.query("OdoSnaps", cols, selection, null, groupBy, having, orderBy);
+        Cursor cursor = db.query(DatabaseOpenHelper.ODOSNAPS_TABLE_NAME,
+                cols, selection, null, groupBy, having, orderBy);
         ArrayList<OdometerSnap> odoSnaps = new ArrayList<>();
 
         while (cursor.moveToNext()) {

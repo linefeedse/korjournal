@@ -2,6 +2,8 @@ package se.linefeed.korjournal.models;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -10,9 +12,12 @@ import android.widget.TextView;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import se.linefeed.korjournal.DatabaseOpenHelper;
 import se.linefeed.korjournal.api.KorjournalAPI;
 import se.linefeed.korjournal.api.KorjournalAPIInterface;
 
@@ -22,6 +27,7 @@ public class VehicleList {
     private String selectedName = null;
     private Spinner spinner;
     private HashMap<String, Vehicle> vehicles;
+    private Context mContext = null;
 
     public VehicleList(Context context, int vehicle_spinner_item, Spinner vehicleSpinner) {
 
@@ -32,6 +38,7 @@ public class VehicleList {
                 vehicleSelectorArrayList);
         vehicleSpinner.setAdapter(vehicleSpinnerAdapter);
         vehicles = new HashMap<String, Vehicle>();
+        mContext = context;
     }
 
     public void saveSelected() {
@@ -81,17 +88,44 @@ public class VehicleList {
 
     public void request(KorjournalAPI mApi, final TextView statusText, final SharedPreferences sharedPreferences) {
         final HashMap<String, Vehicle> myVehicles = new HashMap<String, Vehicle>();
+        final HashMap<String, Vehicle> dbVehicles = new HashMap<String, Vehicle>();
+        final DatabaseOpenHelper dboh = new DatabaseOpenHelper(mContext);
+
+        SQLiteDatabase db = dboh.getReadableDatabase();
+        String cols[] = { "url", "name" };
+        String orderBy = null;
+        String groupBy = null;
+        String having = null;
+        String selection = null;
+
+        Cursor cursor = db.query("Vehicles", cols, selection, null, groupBy, having, orderBy);
+
+        if (cursor.getCount() > 0) {
+            vehicleSelectorArrayList.clear();
+            while (cursor.moveToNext()) {
+                Vehicle vehicle = new Vehicle(cursor);
+                dbVehicles.put(vehicle.getName(), vehicle);
+                vehicleSelectorArrayList.add(vehicle.getName());
+            }
+            vehicles = dbVehicles;
+            vehicleSpinnerAdapter.notifyDataSetChanged();
+        }
+        cursor.close();
+        db.close();
+
         statusText.setText("Hämtar fordon...");
         mApi.get_vehicles(myVehicles,
                 new KorjournalAPIInterface() {
                     @Override
-                    public void done() {
-                        if (myVehicles.size() > 0) {
-                            vehicleSelectorArrayList.clear();
-                        }
+                    public void done(JSONObject response) {
+                        SQLiteDatabase db = dboh.getWritableDatabase();
+                        db.delete("Vehicles", null, null);
+                        vehicleSelectorArrayList.clear();
                         for (String vName: myVehicles.keySet()) {
+                            myVehicles.get(vName).insertDb(db);
                             vehicleSelectorArrayList.add(vName);
                         }
+                        db.close();
                         vehicles = myVehicles;
                         vehicleSpinnerAdapter.notifyDataSetChanged();
                         resetSelected(sharedPreferences);

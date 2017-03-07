@@ -5,16 +5,11 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -46,24 +41,19 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 
 import se.linefeed.korjournal.api.KorjournalAPI;
 import se.linefeed.korjournal.api.KorjournalAPIInterface;
 import se.linefeed.korjournal.models.OdometerSnap;
 import se.linefeed.korjournal.models.Position;
-import se.linefeed.korjournal.models.Vehicle;
 import se.linefeed.korjournal.models.VehicleList;
 
 
@@ -305,40 +295,20 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void updateStreetAddress() {
-        List<Address> addresses = null;
         streetAddress = null;
-        Geocoder geocoder = new Geocoder(this,Locale.getDefault());
-        Log.i(TAG, "Requesting address for " + String.format(Locale.getDefault(),"%f %f", mLocation.getLatitude(), mLocation.getLongitude()));
-        try {
-            addresses = geocoder.getFromLocation(
-                    mLocation.getLatitude(),
-                    mLocation.getLongitude(),
-                    // just a single address.
-                    1);
-        } catch (IOException ioException) {
-            Log.e(TAG, "service not available", ioException);
+        Position position = new Position(mLocation);
+        String address = position.getStreetAddress(this);
+        if (address == null || address.equals("")) {
+            return;
         }
-        if (addresses == null || addresses.size()  == 0) {
-            Log.e(TAG, "No street address found");
-        }
-        else {
-            Address address = addresses.get(0);
-            ArrayList<String> addressFragments = new ArrayList<String>();
+        streetAddress = address;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                locationText.setText(streetAddress);//stuff that updates ui
 
-            for(int i = 0; i < address.getMaxAddressLineIndex(); i++) {
-                addressFragments.add(address.getAddressLine(i));
             }
-            Log.i(TAG, "Address found");
-            streetAddress = TextUtils.join(",", addressFragments);
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    locationText.setText(streetAddress);//stuff that updates ui
-
-                }
-            });
-        }
+        });
     }
 
     private void updateReasons() {
@@ -371,12 +341,12 @@ public class MainActivity extends AppCompatActivity implements
         mApi.get_odosnaps(odoSnapArr,
                 new KorjournalAPIInterface() {
                     @Override
-                    public void done() {
+                    public void done(JSONObject response) {
                         DatabaseOpenHelper dboh = new DatabaseOpenHelper(getApplicationContext());
                         SQLiteDatabase db = dboh.getWritableDatabase();
                         db.delete("OdoSnaps", null, null);
                         for (OdometerSnap o: odoSnapArr) {
-                            o.insertDb(db);
+                            o.insertDb(db, DatabaseOpenHelper.ODOSNAPS_TABLE_NAME);
                         }
                         db.close();
                         updateReasons();
@@ -418,108 +388,84 @@ public class MainActivity extends AppCompatActivity implements
         odometerSend.setClickable(false);
 
         sendProgress.setProgress(30);
-        setStatusText("Skickar mätarställning...");
-        mApi.send_odometersnap(vehicleUrl,
-                odometer,
-                mLocation,
+        final OdometerSnap odometerSnap = new OdometerSnap(vehicleUrl,
+                Integer.parseInt(odometer),
+                new Position(mLocation),
                 streetAddress,
                 reason,
                 radioIsStartButton.isChecked(),
                 radioIsEndButton.isChecked(),
-                new Response.Listener<JSONObject>() {
+                odoImageFile);
+        setStatusText("Skickar mätarställning...");
+        odometerSnap.sendApi(mApi,
+                new KorjournalAPIInterface() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void done(JSONObject response) {
                         try {
-                            String odolink = response.get("url").toString();
+                            odometerSnap.setUrl(response.get("url").toString());
                             onRequestResponse("Skickat!");
+                            if (odoImageFile == null) {
+                                setStatusText("Mätarställning har skickats");
+                                sendProgress.setProgress(0);
+                                return;
+                            }
+                            setStatusText("Skickar bild...");
                             sendProgress.setProgress(50);
-                            sendImageForOdo(odolink);
+                            final Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int progress = sendProgress.getProgress();
+                                    if (progress > 49 && progress < 79)
+                                        sendProgress.setProgress(progress + 20);
+                                }
+                            }, 1500);
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int progress = sendProgress.getProgress();
+                                    if (progress > 69 && progress < 79)
+                                        sendProgress.setProgress(progress + 20);
+                                }
+                            }, 4000);
+                            odometerSnap.sendImage(mApi,
+                                    new KorjournalAPIInterface() {
+                                        @Override
+                                        public void done(JSONObject response) {
+                                            try {
+                                                String imagefile = response.getString("imagefile");
+                                                sendProgress.setProgress(99);
+                                                Log.i("INFO", "Successfully uploaded imagefile: " + imagefile);
+                                                setStatusText("Raderar bild...");
+                                                odometerSnap.deletePicture();
+                                                loadLastOdoImage();
+                                                setStatusText("Mätarställning har skickats");
+                                                sendProgress.setProgress(0);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                        @Override
+                                        public void error(String error) {
+                                            Log.i("Error", error);
+                                        }
+                                    }
+                            );
                         }
                         catch (JSONException e)
                         {
                             onRequestResponse("JSON Error!");
                         }
                     }
-                },
-                new Response.ErrorListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
+                    public void error(String error) {
+
+                        // XXX Fixme queue for later sending
                         onRequestResponse("Error!");
                         sendProgress.setProgress(0);
                     }
                 }
-            );
-    }
-
-    private void sendImageForOdo(final String linkedOdo) {
-        setStatusText("Skickar bild...");
-        mApi.send_odoimage(odoImageFile,linkedOdo, new Response.Listener<NetworkResponse>() {
-            @Override
-            public void onResponse(NetworkResponse response) {
-                String resultResponse = new String(response.data);
-                try {
-                    JSONObject result = new JSONObject(resultResponse);
-
-                    String imagefile = result.getString("imagefile");
-                    sendProgress.setProgress(99);
-                    Log.i("INFO", "Successfully uploaded imagefile: " + imagefile);
-                    File file = new File(odoImageFile);
-                    setStatusText("Raderar bild...");
-                    if (file.exists()) {
-                        file.delete();
-                    }
-                    loadLastOdoImage();
-                    setStatusText("Mätarställning har skickats");
-                    sendProgress.setProgress(0);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                NetworkResponse networkResponse = error.networkResponse;
-                String errorMessage = "Unknown error";
-                if (networkResponse == null) {
-                    if (error.getClass().equals(TimeoutError.class)) {
-                        errorMessage = "Request timeout";
-                    } else if (error.getClass().equals(NoConnectionError.class)) {
-                        errorMessage = "Failed to connect server";
-                    }
-                } else {
-                    String result = new String(networkResponse.data);
-                    try {
-                        JSONObject response = new JSONObject(result);
-                        try {
-                            response.getString("imagefile");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-                Log.i("Error", errorMessage);
-                error.printStackTrace();
-            }
-        });
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                int progress = sendProgress.getProgress();
-                if (progress > 49 && progress < 79)
-                    sendProgress.setProgress(progress + 20);
-            }
-        }, 1500);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                int progress = sendProgress.getProgress();
-                if (progress > 69 && progress < 79)
-                    sendProgress.setProgress(progress + 20);
-            }
-        }, 4000);
+        );
     }
 
     @Override
@@ -605,6 +551,8 @@ public class MainActivity extends AppCompatActivity implements
             deletePicButton.setClickable(false);
             return;
         }
+
+        // XXX Fixme stop loading old pictures, they are likely from the send queue
         if (pictures.length > 1) {
             Arrays.sort(pictures, new Comparator<File>() {
                 @Override

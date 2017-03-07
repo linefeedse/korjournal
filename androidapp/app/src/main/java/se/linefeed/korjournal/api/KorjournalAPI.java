@@ -10,9 +10,11 @@ import android.util.Log;
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -29,7 +31,6 @@ import java.util.Map;
 
 import se.linefeed.korjournal.MyJsonStringRequest;
 import se.linefeed.korjournal.MyMultipartRequest;
-import se.linefeed.korjournal.R;
 import se.linefeed.korjournal.models.OdometerSnap;
 import se.linefeed.korjournal.models.Vehicle;
 
@@ -85,7 +86,7 @@ public class KorjournalAPI {
                         } catch (JSONException e) {
                             done.error("JSON-fel!");
                         }
-                        done.done();
+                        done.done(response);
                     }
                 },
                 errorListener
@@ -130,11 +131,10 @@ public class KorjournalAPI {
      * Upload an image for a previously sent odometer reading
      * @param odoImageFile String full path to file to send
      * @param linkedOdo String as "http://host/api/vehicle/2/
-     * @param responseListener a Response.Listener<NetworkResponse>
-     * @param errorListener a Response.ErrorListener
+     * @param done KorjournalAPIInterface
      */
 
-    public void send_odoimage(final String odoImageFile,final String linkedOdo, Response.Listener<NetworkResponse> responseListener, Response.ErrorListener errorListener) {
+    public void send_odoimage(final String odoImageFile,final String linkedOdo, final KorjournalAPIInterface done) {
         final String url = base_url + "/api/odometerimage/";
         if (odoImageFile == null || linkedOdo == null) {
             return;
@@ -142,7 +142,46 @@ public class KorjournalAPI {
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
-        MyMultipartRequest request = new MyMultipartRequest(url, responseListener, errorListener) {
+        MyMultipartRequest request = new MyMultipartRequest(url,
+            new Response.Listener<NetworkResponse>() {
+                @Override
+                public void onResponse(NetworkResponse response) {
+                    String resultResponse = new String(response.data);
+                    try {
+                        done.done(new JSONObject(resultResponse));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        done.error(e.getLocalizedMessage());
+                    }
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    NetworkResponse networkResponse = error.networkResponse;
+                    String errorMessage = "Unknown error";
+                    if (networkResponse == null) {
+                        if (error.getClass().equals(TimeoutError.class)) {
+                            errorMessage = "Request timeout";
+                        } else if (error.getClass().equals(NoConnectionError.class)) {
+                            errorMessage = "Failed to connect server";
+                        }
+                    } else {
+                        String result = new String(networkResponse.data);
+                        try {
+                            JSONObject response = new JSONObject(result);
+                            try {
+                                response.getString("imagefile");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    done.error(errorMessage);
+                }
+        }) {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
@@ -175,55 +214,25 @@ public class KorjournalAPI {
         mRequestQueue.add(request);
     }
 
-    /**
-     * Upload an odometer reading
-     * @param vehicle
-     * @param odometer
-     * @param location
-     * @param streetAddress
-     * @param reason
-     * @param isStart
-     * @param isEnd
-     * @param responseListener
-     * @param errorListener
-     */
-
-    public void send_odometersnap(String vehicle, String odometer, Location location, String streetAddress, String reason, boolean isStart, boolean isEnd, Response.Listener<JSONObject> responseListener, Response.ErrorListener errorListener){
+    public void send_odometersnap(OdometerSnap odometerSnap, final KorjournalAPIInterface done){
         final String url = base_url + "/api/odometersnap/";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
-        String body = "{ \"vehicle\": \"" + vehicle +
-                "\", \"odometer\": \"" + odometer + "\"";
-        if (location != null) {
-            body = body.concat(String.format(Locale.US, ", \"poslat\": \"%f\", \"poslon\": \"%f\"",
-                    location.getLatitude(),
-                    location.getLongitude()));
-        }
-        if (streetAddress != null) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"where\": \"%s\"",
-                    streetAddress.replace("\"","''")));
-        }
-        if (reason != null && !reason.equals("")) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"why\": \"%s\"",
-                    reason.replace("\"","''")));
-        }
-        if (isStart) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"type\": \"%d\"",
-                    1));
-        }
-        if (isEnd) {
-            body = body.concat(String.format(Locale.getDefault(),
-                    ", \"type\": \"%d\"",
-                    2));
-        }
-        body = body.concat(" }");
-        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.POST, url, body,
-                responseListener,
-                errorListener
+
+        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.POST, url, odometerSnap.toJSON(),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        done.done(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        done.error("" + error.networkResponse.statusCode);
+                    }
+                }
         ) {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
@@ -260,7 +269,7 @@ public class KorjournalAPI {
                         {
                             done.error("get_odosnaps JSON-fel!" + e.getMessage());
                         }
-                        done.done();
+                        done.done(null);
                     }
                 },
                 errorListener
@@ -286,11 +295,14 @@ public class KorjournalAPI {
         StringRequest checkRequest = new StringRequest(Request.Method.GET, CHK_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                done.done();
+                done.done(null);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                if (error.networkResponse == null) {
+                    return;
+                }
                 Log.e("Error", "Server responded " + error.networkResponse.statusCode);
                 StringRequest verifyRequest = new StringRequest(Request.Method.POST, VER_URL, new Response.Listener<String>() {
                     @Override
