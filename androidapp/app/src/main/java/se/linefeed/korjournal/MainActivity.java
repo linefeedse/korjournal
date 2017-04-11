@@ -54,6 +54,7 @@ import se.linefeed.korjournal.api.KorjournalAPI;
 import se.linefeed.korjournal.api.KorjournalAPIInterface;
 import se.linefeed.korjournal.models.OdometerSnap;
 import se.linefeed.korjournal.models.Position;
+import se.linefeed.korjournal.models.SendQueue;
 import se.linefeed.korjournal.models.VehicleList;
 
 
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements
     private KorjournalAPI mApi = null;
     private ArrayList<String> reasons;
     private ArrayAdapter<String> reasonSuggestionAdapter;
+    private SendQueue mSendQueue = null;
 
     private final int flash_color = 0xFFEE3030;
     @Override
@@ -126,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements
         radioIsEndButton = (RadioButton) findViewById(R.id.radio_isend);
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mApi = new KorjournalAPI(this);
+        mSendQueue = new SendQueue(this);
     }
 
     /**
@@ -143,8 +146,21 @@ public class MainActivity extends AppCompatActivity implements
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(this);
         }
-        vehicleList.request(mApi, statusText, sharedPreferences);
-        requestOdosnaps();
+        vehicleList.request(mApi,
+                statusText,
+                sharedPreferences,
+                new KorjournalAPIInterface() {
+                    @Override
+                    public void done(JSONObject ignored) {
+                        requestOdosnaps();
+                        mSendQueue.sendAll(mApi);
+                    }
+                    @Override
+                    public void error(String ignored) {
+
+                    }
+                }
+        );
         Thread thread = new Thread() {
             @Override
             public void run() {

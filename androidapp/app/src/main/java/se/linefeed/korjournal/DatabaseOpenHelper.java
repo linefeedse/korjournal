@@ -38,7 +38,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int versionFrom, int versionTo) {
-        if (versionFrom == 1 && versionTo == 2) {
+        if (versionFrom == 1 && versionTo == 3) {
             db.execSQL(VEHICLES_TABLE_CREATE);
         }
         if (versionFrom < 3 && versionTo == 3) {

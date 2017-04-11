@@ -86,7 +86,7 @@ public class VehicleList {
         }
     }
 
-    public void request(KorjournalAPI mApi, final TextView statusText, final SharedPreferences sharedPreferences) {
+    public void request(KorjournalAPI mApi, final TextView statusText, final SharedPreferences sharedPreferences, final KorjournalAPIInterface done) {
         final HashMap<String, Vehicle> myVehicles = new HashMap<String, Vehicle>();
         final HashMap<String, Vehicle> dbVehicles = new HashMap<String, Vehicle>();
         final DatabaseOpenHelper dboh = new DatabaseOpenHelper(mContext);
@@ -130,6 +130,7 @@ public class VehicleList {
                         vehicleSpinnerAdapter.notifyDataSetChanged();
                         resetSelected(sharedPreferences);
                         statusText.setText("Klar!");
+                        done.done(null);
                     }
                     @Override
                     public void error(String e) {
@@ -172,5 +173,9 @@ public class VehicleList {
                 spinner.setBackgroundColor(transparent);
             }
         }, 300);
+    }
+
+    public int size() {
+        return vehicleSelectorArrayList.size();
     }
 }

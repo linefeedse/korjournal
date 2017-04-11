@@ -3,7 +3,10 @@ package se.linefeed.korjournal.models;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
+import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -13,11 +16,9 @@ import se.linefeed.korjournal.api.KorjournalAPI;
 import se.linefeed.korjournal.api.KorjournalAPIInterface;
 
 public class SendQueue {
-    private ArrayList<OdometerSnap> odometerSnaps;
     private Context mContext = null;
 
     public SendQueue(Context context) {
-        odometerSnaps = new ArrayList<>();
         mContext = context;
     }
 
@@ -29,7 +30,7 @@ public class SendQueue {
         db.close();
     }
 
-    public void sendAll(final Context context, final KorjournalAPI korjournalAPI) {
+    public void sendAll(final KorjournalAPI korjournalAPI) {
         final DatabaseOpenHelper dboh = new DatabaseOpenHelper(mContext);
         SQLiteDatabase db = dboh.getReadableDatabase();
         String orderBy = null;
@@ -52,17 +53,46 @@ public class SendQueue {
                 Thread addressThread = new Thread() {
                     @Override
                     public void run() {
-                        odometerSnap.updateStreetAddress(context);
+                        odometerSnap.updateStreetAddress(mContext);
                         odometerSnap.sendApi(korjournalAPI,
                                 new KorjournalAPIInterface() {
                                     @Override
-                                    public void done(JSONObject ignored) {
+                                    public void done(JSONObject response) {
                                         // XXX Fixme send picture if there is a picturepath...
 
                                         SQLiteDatabase db = dboh.getWritableDatabase();
                                         db.delete(DatabaseOpenHelper.ODOSNAPS_TABLE_NAME,
                                                 "id="+ rowId, null);
                                         db.close();
+                                        if (odometerSnap.getPicturePath() == null || odometerSnap.getPicturePath().equals(""))
+                                        {
+                                            return;
+                                        }
+                                        try {
+                                            odometerSnap.setUrl(response.get("url").toString());
+                                            odometerSnap.sendImage(korjournalAPI,
+                                                new KorjournalAPIInterface() {
+                                                    @Override
+                                                    public void done(JSONObject response) {
+                                                        try {
+                                                            String imagefile = response.getString("imagefile");
+                                                            Log.i("INFO", "Successfully uploaded imagefile: " + imagefile);
+                                                            odometerSnap.deletePicture();
+                                                        } catch (JSONException e) {
+                                                            e.printStackTrace();
+                                                        }
+                                                    }
+                                                    @Override
+                                                    public void error(String error) {
+                                                        Log.i("Error", error);
+                                                    }
+                                                }
+                                            );
+                                        }
+                                        catch (JSONException e)
+                                        {
+                                            Log.i("JSON Error!", e.getMessage());
+                                        }
                                     }
                                     @Override
                                     public void error(String error) {
