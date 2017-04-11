@@ -7,5 +7,10 @@ docker pull linefeedse/korjournal:latest
 docker tag -f linefeedse/korjournal:latest korjournal:latest
 docker kill korjournal 2>/dev/null||true
 docker rm korjournal 2>/dev/null||true
-docker run --name=korjournal --hostname=korjournal --restart=always -d -v {{ webapp_mediaroot }}:/vagrant/www/media -v {{ webapp_logroot }}:/var/log/nginx --env-file=/etc/docker/envfile.txt -p 80:80 -p 443:443 --add-host=db:$dockerhost korjournal:latest
+if [ -d /etc/letsencrypt/live ] ; then
+	VOLUMES="-v {{ webapp_mediaroot }}:/vagrant/www/media -v {{ webapp_logroot }}:/var/log/nginx -v /etc/letsencrypt:/etc/letsencrypt"
+else
+	VOLUMES="-v {{ webapp_mediaroot }}:/vagrant/www/media -v {{ webapp_logroot }}:/var/log/nginx"
+fi
+docker run --name=korjournal --hostname=korjournal --restart=always -d $VOLUMES --env-file=/etc/docker/envfile.txt -p 80:80 -p 443:443 --add-host=db:$dockerhost korjournal:latest
 docker exec korjournal bash -c '( cd /vagrant/www; ./manage.py migrate )'

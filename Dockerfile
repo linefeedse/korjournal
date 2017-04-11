@@ -38,18 +38,19 @@ RUN apt-get -y install build-essential cmake pkg-config unzip python3-numpy curl
 # must make all in one go for image to not be huge
 RUN curl -s -O https://codeload.github.com/opencv/opencv/zip/3.2.0 && unzip 3.2.0 && mkdir buildcv && cd buildcv && cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local ../opencv-3.2.0 && make -j3 && make install/strip && cd .. && rm -rf buildcv opencv-3.2.0
 
+# Let's encrypt
+# 
+RUN add-apt-repository -y ppa:certbot/certbot && apt-get update && apt-get install -y certbot
+
 # Supervisor and conf
 #
 RUN apt-get install -y supervisor
 ADD ./conf/nginx-app.conf /etc/nginx/sites-enabled/nginx-app.conf
 ADD ./conf/supervisor-app.conf /etc/supervisor/conf.d/supervisor-app.conf
-ADD ./conf/nginx-selfsigned.crt /etc/ssl/certs/kilometerkoll_se.crt
-ADD ./conf/nginx-selfsigned.key /etc/ssl/private/kilometerkoll_se.key
+RUN mkdir -p /etc/letsencrypt/live/kilometerkoll.se/
+ADD ./conf/nginx-selfsigned.crt /etc/letsencrypt/live/kilometerkoll.se/fullchain.pem
+ADD ./conf/nginx-selfsigned.key /etc/letsencrypt/live/kilometerkoll.se/privkey.pem
 RUN rm /etc/nginx/sites-enabled/default
-
-# Let's encrypt
-# 
-RUN add-apt-repository -y ppa:certbot/certbot && apt-get update && apt-get install -y certbot
 
 ADD ./www /vagrant/www
 
