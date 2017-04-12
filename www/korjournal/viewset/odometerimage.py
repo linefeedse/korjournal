@@ -82,12 +82,20 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
         odoimage = serializer.save(driver=self.request.user, imagefile=imgfile)
         lim_min = 0
         lim_max = 9999999
+        # From the last three non-null odometers, pick the second largest odometer,
+        # this is our MIN
+        # From the MIN date, calculate reasonable kilometers until today,
+        # this is our MAX
         try:
-            prev_odometers = OdometerSnap.objects.filter(vehicle=odoimage.odometersnap.vehicle).order_by('-odometer')[:3]
+            last_odometers = OdometerSnap.objects.filter(
+                vehicle=odoimage.odometersnap.vehicle,odometer__gt=0).order_by('-when')[:3]
+            prev_odometers = OdometerSnap.objects.filter(
+                vehicle=odoimage.odometersnap.vehicle,when__gt=last_odometers[2].when).order_by('-odometer')[:2]
             lim_min = prev_odometers[1].odometer
-            since_days = timezone.now() - prev_odometers[0].when
-            max_km_per_day = 5000
-            lim_max = prev_odometers[0].odometer + since_days.days * max_km_per_day + max_km_per_day
+
+            since_days = timezone.now() - prev_odometers[1].when
+            max_km_per_day = 1100
+            lim_max = prev_odometers[1].odometer + since_days.days * max_km_per_day + max_km_per_day
         except IndexError:
             pass
         if (odoimage.odometersnap.odometer < 1):
