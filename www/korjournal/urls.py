@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from rest_framework import routers
 from korjournal import views
-from korjournal.view import report
+from korjournal.view import report, invoice
 from korjournal.viewset import odometersnap, odometerimage
 
 from . import views
@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^editor/(?P<odo_snap_id>[0-9]+)/delete$', views.delete_odo_snap, name='delete_odo_snap'),
     url(r'^editor/(?P<odo_image_id>[0-9]+)/deleteimage$', views.delete_odo_image, name='delete_odo_image'),
     url(r'^report/$', report.report, name='report'),
+    url(r'^invoice/', invoice.invoice, name='invoice'),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/$', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^login/', 'django.contrib.auth.views.login', name='login'),
