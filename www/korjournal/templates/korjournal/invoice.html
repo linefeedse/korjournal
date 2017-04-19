@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% block extra_javascript %}
+<link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
+<link href="/korjournal/css/font-awesome.min.css" rel="stylesheet">
+<link href="/korjournal/css/profile.css" rel="stylesheet">
+<script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
+<script src="/korjournal/js/invoice.js?1"></script>
+
+{% endblock %}
+{% block content %}
+<h2>Faktura {{ invoice.invoice_number }}</h2>
+
+<p>Avser:
+{{ invoice.specification }}
+{{ invoice.scope_from|date:"Y-m-d" }} - {{ invoice.scope_to|date:"Y-m-d" }}</p>
+<p>Förfallodag: {{ invoice.duedate|date:"Y-m-d" }} </p>
+{% csrf_token %}
+<input type="hidden" name="invoice_link_id" value="{{ invoice.link_id }}">
+<p>Namn och adress på fakturan:</p>
+{% if invoice.customer_name and invoice.customer_name != "" %}
+    <a href="#" class="customer_name" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">{{ invoice.customer_name }}</a>
+{% else %}
+    <a href="#" class="customer_name" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">Inget namn</a>
+{% endif %}
+
+<a href="/invoice/?l={{ invoice.link_id }}&pdf=1">
+    <div class="profile-icon-box">
+        <div class="center-block">
+            <i class="fa fa-print fa-2x"></i>
+        </div>
+        Hämta Faktura i PDF-format
+    </div>
+</a>
+
+{% endblock %}

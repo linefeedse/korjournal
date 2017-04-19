@@ -65,3 +65,10 @@ class DenyAll(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return False
 
+class IsAdminOrPartialUpdate(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        if view.action == 'partial_update':
+            return True
+        else:
+            return permissions.IsAdminUser.has_permission(self, request, view)

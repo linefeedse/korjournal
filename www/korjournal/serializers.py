@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from korjournal.models import OdometerSnap, Vehicle, OdometerImage, RegisterCode, Driver
+from korjournal.models import OdometerSnap, Vehicle, OdometerImage, RegisterCode, Driver, Invoice
 from rest_framework import serializers
 import requests
 from requests_oauthlib import OAuth1Session
@@ -63,10 +63,20 @@ class DriverSerializer(serializers.HyperlinkedModelSerializer):
         model = Driver
         fields = ('url','vehicle','user')
 
-#    def create(self,validated_data):
-#        try:
-#            user = User.objects.filter(username=validated_data['user'])[0]
-#            vehicle = Vehicle.objects.filter(id=validated_data['vehicle'])[0]
-#        except IndexError:
-#            return None
-#       driver = Driver(user=user,vehicle=vehicle)
+class InvoiceSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = (
+            'url',
+            'link_id',
+            'customer',
+            'customer_name',
+            'customer_address',
+            'scope_from',
+            'scope_to',
+            'invoicedate',
+            'duedate',
+            'specification',
+            'amount',
+            'invoice_number',
+            'is_paid')

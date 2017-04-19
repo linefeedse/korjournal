@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+{% extends "korjournal/base.html" %}
+{% load bootstrap3 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+{% block extra_javascript %}
+<link href="/korjournal/css/font-awesome.min.css" rel="stylesheet">
+<link href="/korjournal/css/profile.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<h2>Mina fakturor</h2>
+
+<table class="table table-striped">
+    <tr class="editor-table-header">
+        <td class="col-xs-12 col-sm-12 col-md-12">
+        <div class="col-xs-8 col-sm-4">Förfallodag</div>
+        <div class="col-xs-4 col-sm-4">Summa</div>
+        <div class="col-xs-4 col-sm-4">Betald</div>
+        </td>
+    </tr>
+   
+{% if invoices %}
+    {% for invoice in invoices %}
+    <tr>
+        <td class="col-xs-12">
+        <a href="/invoice/?l={{ invoice.link_id }}">
+        <p class="col-xs-8 col-sm-4">
+        {{ invoice.duedate|date:"Y-m-d" }}
+        </p>
+        <p class="col-xs-4 col-sm-4">
+        {{ invoice.amount_vatincl|floatformat:2 }}
+        </p>
+        <p class="col-xs-4 col-sm-4">
+        {% if invoice.is_paid %}
+        Ja
+        {% else %}
+        <span style="color: red;">Nej</span>
+        {% endif %}
+        </p>
+        </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endif %}
+
+{% endblock %}

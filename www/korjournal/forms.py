@@ -62,3 +62,7 @@ class ContactForm(Form):
 class ApplinkForm(Form):
     phone = CharField(error_messages={'incomplete': 'Ange ett mobiltelefonnummer'},
                       validators=[RegexValidator(r'^[0-9]{9,11}$', 'Ange ett giltigt mobiltelefonnummer')])
+
+class InvoiceAddressForm(Form):
+    customer_name = CharField(required=True)
+    customer_address = CharField(required=True)

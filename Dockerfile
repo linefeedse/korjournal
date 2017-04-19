@@ -42,6 +42,10 @@ RUN curl -s -O https://codeload.github.com/opencv/opencv/zip/3.2.0 && unzip 3.2.
 # 
 RUN add-apt-repository -y ppa:certbot/certbot && apt-get update && apt-get install -y certbot
 
+# Move this up later
+#
+RUN apt-get -y install python3-reportlab
+
 # Supervisor and conf
 #
 RUN apt-get install -y supervisor

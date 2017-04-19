@@ -13,7 +13,7 @@
 Inloggad som {{ username }}
 </p>
 <div class="row">
-    <div class="col-xs-12 col-sm-4 center-block profile-icon-box">
+    <div class="col-xs-12 col-sm-6 col-md-3 center-block profile-icon-box">
         <a href="/report/">
             <div class="center-block">
                 <i class="fa fa-bar-chart fa-2x"></i>
@@ -21,7 +21,7 @@ Inloggad som {{ username }}
             Årsrapport
         </a>
     </div>
-    <div class="col-xs-12 col-sm-4 center-block profile-icon-box">
+    <div class="col-xs-12 col-sm-6 col-md-3 center-block profile-icon-box">
         <a href="/editor/">
             <div class="center-block">
                 <i class="fa fa-edit fa-2x"></i>
@@ -29,13 +29,21 @@ Inloggad som {{ username }}
             Mina mätarställningar
         </a>
     </div>
-    <div class="col-xs-12 col-sm-4 center-block profile-icon-box">
+    <div class="col-xs-12 col-sm-6 col-md-3 center-block profile-icon-box">
         <a href="/vehicles/">
             <div class="center-block">
                 <i class="fa fa-car fa-2x"></i>
             </div>
             Mina fordon
         </a>
+    </div>
+     <div class="col-xs-12 col-sm-6 col-md-3 center-block profile-icon-box">
+        {% if has_invoices %}<a href="/invoicelist/">{% endif %}
+            <div class="center-block">
+                <i class="fa fa-paper-plane-o fa-2x"></i>
+            </div>
+            Mina fakturor
+        {% if has_invoices %}</a>{% endif %}
     </div>
 </div>
 <div class="profile-footer">

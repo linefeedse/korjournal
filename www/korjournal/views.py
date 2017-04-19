@@ -11,7 +11,7 @@ from datetime import timedelta
 from dateutil import tz, parser
 from rest_framework import viewsets, permissions, filters, renderers
 from rest_framework.decorators import api_view, permission_classes
-from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
+from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode, Invoice
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer, DriverSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll, IsDriver
 from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm, ContactForm, ApplinkForm
@@ -89,7 +89,12 @@ def privacy_policy(request):
 
 @login_required(login_url='/login')
 def profile(request):
-    context = { 'username': request.user.username }
+    try:
+        invoice = Invoice.objects.filter(customer=request.user)[0]
+        has_invoices = True
+    except IndexError:
+        has_invoices = False
+    context = { 'username': request.user.username, 'has_invoices': has_invoices }
     return render(request, 'korjournal/profile.html', context)
 
 @login_required(login_url='/login')
