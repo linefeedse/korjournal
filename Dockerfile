@@ -44,6 +44,7 @@ RUN add-apt-repository -y ppa:certbot/certbot && apt-get update && apt-get insta
 
 # Move this up later
 #
+RUN apt-get -y install language-pack-sv && dpkg-reconfigure locales
 RUN apt-get -y install python3-reportlab
 
 # Supervisor and conf
