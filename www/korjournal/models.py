@@ -64,7 +64,7 @@ class Invoice(models.Model):
     scope_from = models.DateTimeField(default=timezone.now)
     scope_to = models.DateTimeField(default=timezone.now() + timedelta(days=365))
     invoicedate = models.DateTimeField(default=timezone.now)
-    duedate = models.DateTimeField(default=timezone.now() + timedelta(days=10))
+    duedate = models.DateTimeField(default=timezone.now() + timedelta(days=14))
     specification = models.CharField(max_length=128, default="")
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=223.2)
     invoice_number = models.IntegerField(null=False, unique=True, default=None)

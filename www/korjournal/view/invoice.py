@@ -87,7 +87,7 @@ def PDF(request):
     p.rect(168*mm, -37*mm, 25*mm, 6*mm)
     p.setFont("Helvetica-Oblique", 9)
     p.drawString(11*cm, -40*mm, "Förfallodag")
-    p.setFont("Helvetica", 11)
+    p.setFont("Helvetica-Bold", 11)
     p.drawString(11*cm, -45*mm, duedate)
 
     p.setFont("Helvetica-Bold", 11)
@@ -145,7 +145,9 @@ def PDF(request):
     p.drawString(15*mm, -21*cm, "bankgirot")
     p.setFont("Helvetica", 11)
     p.drawString(11*cm, -21*cm, "INBETALNING/GIRERING AVI")
-    p.drawString(17*cm, -21*cm, "Nr. %d" % invoice_number)
+    p.drawString(17*cm, -21*cm, "Nr")
+    p.setFont("Courier-Bold", 11)
+    p.drawString(177*mm, -21*cm, str(invoice_number))
 
     p.setStrokeColor(black)
     p.rect(15*mm, -243*mm, 185*mm, 32*mm)
@@ -174,10 +176,10 @@ def PDF(request):
     p.drawString(9*cm, -276*mm, to_pay)
     p.drawString(118*mm, -276*mm, seller_bankgiro)
 
-    p.setFont("Courier-Oblique", 11)
+    p.setFont("Courier", 11)
     p.drawString(15*mm, -286*mm, "#")
     p.drawString(48*mm, -286*mm, "#")
-    p.drawString(190*mm, -286*mm, "#  #")
+    p.drawString(170*mm, -286*mm, "%s #45#" % seller_bankgiro.replace("-",""))
 
     # Close the PDF object cleanly, and we're done.
     p.showPage()

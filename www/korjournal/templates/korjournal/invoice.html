@@ -6,7 +6,7 @@
 {% block extra_javascript %}
 <link href="/bootstrap3-editable/css/bootstrap-editable.css" rel="stylesheet">
 <link href="/korjournal/css/font-awesome.min.css" rel="stylesheet">
-<link href="/korjournal/css/profile.css" rel="stylesheet">
+<link href="/korjournal/css/invoice.css" rel="stylesheet">
 <script src="/bootstrap3-editable/js/bootstrap-editable.js"></script>
 <script src="/korjournal/js/invoice.js?1"></script>
 
@@ -14,26 +14,50 @@
 {% block content %}
 <h2>Faktura {{ invoice.invoice_number }}</h2>
 
+<div class="col-xs-12">
 <p>Avser:
-{{ invoice.specification }}
-{{ invoice.scope_from|date:"Y-m-d" }} - {{ invoice.scope_to|date:"Y-m-d" }}</p>
-<p>Förfallodag: {{ invoice.duedate|date:"Y-m-d" }} </p>
+<b>{{ invoice.specification }}
+{{ invoice.scope_from|date:"Y-m-d" }} - {{ invoice.scope_to|date:"Y-m-d" }}</b></p>
+<p>Summa kr, inkl moms: <b> {{ invoice.amount_vatincl|floatformat:2 }}</b></p>
+<p>Förfallodag: <b>{{ invoice.duedate|date:"Y-m-d" }}</b></p>
 {% csrf_token %}
 <input type="hidden" name="invoice_link_id" value="{{ invoice.link_id }}">
-<p>Namn och adress på fakturan:</p>
+<p>Namn och adress på fakturan: <button type="button" class="btn btn-xs btn-info" data-toggle="tooltip" title="Vi använder inte denna adress till något men av bokföringsskäl bör man ange namn och adress."><b>?</b></button></p>
+<p>
 {% if invoice.customer_name and invoice.customer_name != "" %}
     <a href="#" class="customer_name" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">{{ invoice.customer_name }}</a>
 {% else %}
     <a href="#" class="customer_name" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">Inget namn</a>
 {% endif %}
+</p>
+<p class="invoice-address-edit">
+{% if invoice.customer_address and invoice.customer_address != "" %}
+    <a href="#" class="customer_address" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">{{ invoice.customer_address }}</a>
+{% else %}
+    <a href="#" class="customer_address" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">Ingen adress</a>
+{% endif %}
+</p>
+{% if invoice.is_paid %}
+<p>Denna faktura är redan betald</p>
+{% else %}
+<p>Betalas till: Linefeed AB, Bankgiro 542-0286. Ange fakturanumret {{ invoice.invoice_number }} som meddelande eller använd avin på fakturan i PDF-format nedan</p>
+{% endif %}
+</div>
 
 <a href="/invoice/?l={{ invoice.link_id }}&pdf=1">
-    <div class="profile-icon-box">
+    <div class="invoice-icon-box col-xs-12 col-sm-4">
         <div class="center-block">
             <i class="fa fa-print fa-2x"></i>
         </div>
         Hämta Faktura i PDF-format
     </div>
 </a>
-
+{% if invoice.is_paid == False %}
+<div class="col-xs-12 col-sm-8">
+<p class="invoice-info-box">Obs! Du behöver inte betala denna faktura om du inte önskar använda Kilometerkoll</p>
+</div>
+{% endif %}
+<div class="invoice-footer col-xs-12">
+    <a href="/#contact">Kontakta kundtjänst</a> eller epost: <a href="mailto:kundtjanst@kilometerkoll.se">kundtjanst@kilometerkoll.se</a>
+</div>
 {% endblock %}

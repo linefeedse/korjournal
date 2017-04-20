@@ -22,4 +22,23 @@ $(document).ready(function() {
             }
         });
     });
+       $('.customer_address').each(function() {
+        $(this).editable({
+            escape: true,
+            ajaxOptions: {
+                type: 'PATCH',
+                dataType: 'json',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+                }
+            },
+            params: function(params) {
+                var data = {}
+                data['customer_address'] = params.value;
+                data['link_id'] = $('[name=invoice_link_id]').val();
+                return JSON.stringify(data);
+            }
+        });
+    });
 });
