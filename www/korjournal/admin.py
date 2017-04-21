@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Vehicle, OdometerSnap, Invoice, OdometerImage
+from .models import Vehicle, OdometerSnap, OdometerImage
+from .model.invoice import Invoice
 
 
 class OdometerImageInline(admin.TabularInline):

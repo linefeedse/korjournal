@@ -1,6 +1,6 @@
 $(document).ready(function() {
     $('[data-toggle="tooltip"]').tooltip();
-    $.fn.editable.defaults.mode = 'inline';
+    $.fn.editable.defaults.mode = 'popup';
     $.fn.editable.defaults.emptytext = 'Inget';
 
     $('.customer_name').each(function() {
@@ -38,6 +38,9 @@ $(document).ready(function() {
                 data['customer_address'] = params.value;
                 data['link_id'] = $('[name=invoice_link_id]').val();
                 return JSON.stringify(data);
+            },
+            success: function(response, newValue) {
+                location.reload(true);
             }
         });
     });

@@ -1,0 +1,8 @@
+Hej!
+
+Bifogat är faktura för tjänsten Kilometerkoll, en elektronisk körjournal. Om du önskar fortsätta använda tjänsten, vänligen betala innan {{ duedate }}.
+
+Detta meddelande har beställts från nummer {{ customer_number }}.
+
+Mvh Tor-Åke Fransson
+kundtjanst@kilometerkoll.se

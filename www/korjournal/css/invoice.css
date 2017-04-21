@@ -12,7 +12,6 @@
 }
 
 .invoice-info-box {
-	margin-top: 35px;
 	border: 1px solid pink;
 	padding: 5px;
 	background: rgb(0.1,1.0,1.0);
@@ -21,4 +20,8 @@
 
 .invoice-address-edit {
 	margin-bottom: 20px;
+}
+
+.invoice-empty-space {
+	margin-bottom: 35px;
 }

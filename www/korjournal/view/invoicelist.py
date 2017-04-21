@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from korjournal.models import Invoice
+from korjournal.model.invoice import Invoice
 
 
 @login_required(login_url='/login')

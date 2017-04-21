@@ -2,7 +2,7 @@ import locale, random, re
 from rest_framework import viewsets, permissions, renderers
 from rest_framework.exceptions import PermissionDenied
 from django.http import HttpResponseNotFound
-from korjournal.models import Invoice
+from korjournal.model.invoice import Invoice
 from korjournal.serializers import InvoiceSerializer
 from korjournal.permissions import IsAdminOrPartialUpdate
 from uuid import uuid4

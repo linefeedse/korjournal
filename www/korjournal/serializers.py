@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User, Group
-from korjournal.models import OdometerSnap, Vehicle, OdometerImage, RegisterCode, Driver, Invoice
+from korjournal.models import OdometerSnap, Vehicle, OdometerImage, RegisterCode, Driver
+from korjournal.model.invoice import Invoice
 from rest_framework import serializers
 import requests
 from requests_oauthlib import OAuth1Session

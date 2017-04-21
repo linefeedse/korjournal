@@ -11,7 +11,8 @@ from datetime import timedelta
 from dateutil import tz, parser
 from rest_framework import viewsets, permissions, filters, renderers
 from rest_framework.decorators import api_view, permission_classes
-from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode, Invoice
+from korjournal.models import Vehicle, Driver, OdometerSnap, OdometerImage, RegisterCode
+from korjournal.model.invoice import Invoice
 from korjournal.serializers import UserSerializer, GroupSerializer, VehicleSerializer, OdometerSnapSerializer, OdometerImageSerializer, RegisterCodeSerializer, DriverSerializer
 from korjournal.permissions import IsOwner, AnythingGoes, DenyAll, IsDriver
 from korjournal.forms import DeleteOdoSnapForm, YearVehicleForm, DeleteOdoImageForm, RegistrationForm, VerificationForm, DeleteVehicleForm, DeleteDriverForm, ContactForm, ApplinkForm

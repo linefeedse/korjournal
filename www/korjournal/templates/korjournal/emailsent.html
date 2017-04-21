@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+{% load bootstrap3 %}
+{% bootstrap_css %}
+	<script src="/korjournal/js/jquery-2.0.3.min.js"></script>
+{% bootstrap_javascript %}
+{% block extra_javascript %}
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+{% endblock %}
+{% block bootstrap3_content %}
+	<div class="container">
+		<h2>Tack!</h2>
+		<blockquote>
+			<span class="col-xs-12 col-sm-6 col-md-5">
+			Ett epostmeddelande har skickats till:
+			</span>
+		  	<span class="col-xs-12 col-sm-5 col-md-3"><i>{{ email }}</i></span>
+		</blockquote>
+	</div>
+{% endblock %}

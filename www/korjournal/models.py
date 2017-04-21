@@ -55,23 +55,3 @@ class RegisterCode(models.Model):
     phone = models.IntegerField()
     code = models.IntegerField()
     when = models.DateTimeField(default=timezone.now)
-
-class Invoice(models.Model):
-    link_id = models.CharField(max_length=64, blank=False, unique=True, default=None)
-    customer = models.ForeignKey('auth.User', null=False)
-    customer_name = models.CharField(max_length=128, default="")
-    customer_address = models.CharField(max_length=128, default="")
-    scope_from = models.DateTimeField(default=timezone.now)
-    scope_to = models.DateTimeField(default=timezone.now() + timedelta(days=365))
-    invoicedate = models.DateTimeField(default=timezone.now)
-    duedate = models.DateTimeField(default=timezone.now() + timedelta(days=14))
-    specification = models.CharField(max_length=128, default="")
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=223.2)
-    invoice_number = models.IntegerField(null=False, unique=True, default=None)
-    is_paid = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.link_id
-
-    def amount_vatincl(self):
-        return float(self.amount) * 1.25
