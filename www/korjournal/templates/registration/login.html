@@ -24,6 +24,11 @@
         </form>
         <p><a href="/register/">Återställ min personliga kod</a></p>
         <script type="text/javascript">
+            if ((window.location.search.substr(1).split('&')[0]).split('=')[0] == 'phone')
+            {
+                var phone = (window.location.search.substr(1).split('&')[0]).split('=')[1];
+                document.getElementById('id_username').value = phone;
+            }
             $(function(){
                 $(".alert-message").alert();
                 $('#mainForm').submit(function(){
