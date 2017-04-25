@@ -4,6 +4,12 @@
 {% bootstrap_javascript %}
 
 {% block content %}
+<link rel="stylesheet" type="text/css" href="/korjournal/css/cookieconsent.min.css" />
+<script src="/korjournal/js/cookieconsent.min.js"></script>
+<script>
+window.addEventListener("load", function(){
+});
+</script>
     {% if form.errors %}
       <div class="alert alert-danger">
           <p>Mata in användarnamn (telefonnummer) och lösenord (kod från ditt sms)</p>
@@ -24,6 +30,24 @@
         </form>
         <p><a href="/register/">Återställ min personliga kod</a></p>
         <script type="text/javascript">
+            window.cookieconsent.initialise({
+              "palette": {
+                "popup": {
+                  "background": "#edeff5",
+                  "text": "#838391"
+                },
+                "button": {
+                  "background": "#4b81e8"
+                }
+              },
+              "showLink": false,
+              "theme": "classic",
+              "position": "top",
+              "content": {
+                "message": "Den här webbsidan använder kakor för att ge en bättre användarupplevelse.",
+                "dismiss": "OK!"
+              }
+            });
             if ((window.location.search.substr(1).split('&')[0]).split('=')[0] == 'phone')
             {
                 var phone = (window.location.search.substr(1).split('&')[0]).split('=')[1];
