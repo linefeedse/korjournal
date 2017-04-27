@@ -39,9 +39,9 @@
 <p class="col-xs-6 col-sm-3 col-md-2">E-postadress för faktura:</p>
 <p class="invoice-address-edit col-xs-6 col-sm-5 col-md-3">
 {% if invoice.customer_address and invoice.customer_address != "" %}
-    <a href="#" class="customer_address" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">{{ invoice.customer_address }}</a>
+    <a href="#" class="customer_address" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Epostadress">{{ invoice.customer_address }}</a>
 {% else %}
-    <a href="#" class="customer_address" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Kundnamn">Ingen epostadress</a>
+    <a href="#" class="customer_address" id="who" data-type="text" data-pk="0" data-url="/api/invoice/{{ invoice.id }}/" data-title="Epostadress">Ingen epostadress</a>
 {% endif %}
 </p>
 <p class="col-xs-12 col-sm-4 col-md-7 text-center">
