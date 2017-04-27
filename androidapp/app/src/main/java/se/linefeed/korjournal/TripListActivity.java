@@ -1,11 +1,13 @@
 package se.linefeed.korjournal;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -54,13 +56,21 @@ public class TripListActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        SharedPreferences sharedPreferences =  PreferenceManager.getDefaultSharedPreferences(this);
+        String phone = sharedPreferences.getString("username_text","");
+        String prefillPhoneArgs = null;
+        if (phone.equals("")) {
+            prefillPhoneArgs = "";
+        } else {
+            prefillPhoneArgs = "?phone=" + phone;
+        }
+        final String clickUrl = "http://kilometerkoll.se/login/" + prefillPhoneArgs;
         linkButton.setClickable(true);
         linkButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View parent) {
-                String url = "http://kilometerkoll.se/editor/";
                 Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
+                intent.setData(Uri.parse(clickUrl));
                 startActivity(intent);
             }
         });
