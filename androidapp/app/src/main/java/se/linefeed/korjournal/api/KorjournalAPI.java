@@ -249,7 +249,7 @@ public class KorjournalAPI {
      * @param errorListener
      */
     public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, final KorjournalAPIInterface done, Response.ErrorListener errorListener) {
-        final String api_url = base_url + "/api/odometersnap/?days=60";
+        final String api_url = base_url + "/api/odometersnap/?days=30";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
@@ -344,5 +344,40 @@ public class KorjournalAPI {
             }
         };
         mRequestQueue.add(checkRequest);
+    }
+
+    /**
+     * Ask for invoices due
+     * @param done KorjournalAPIInterface
+     */
+    public void get_invoices_due(final KorjournalAPIInterface done) {
+        final String api_url = base_url + "/api/invoicesdue/";
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(mContext);
+        }
+        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.GET, api_url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        done.done(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if (error.networkResponse != null) {
+                            Log.e("Error", "Server responded " + error.networkResponse.statusCode);
+                            done.error("" + error.networkResponse.statusCode);
+                        }
+                    }
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                return getAuthorizationHeaders();
+            }
+        };
+        // Add the request to the RequestQueue.
+        mRequestQueue.add(req);
     }
 }

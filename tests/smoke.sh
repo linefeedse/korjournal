@@ -123,7 +123,9 @@ add_driver() {
 make_invoices() {
 	echo "Creating invoices"
 	curl -s -H "$header1" -H "$header2" -X POST \
-	-d '{ "customer": "'$api'/users/2/", "specification": "Kilometerkoll elektronisk körkournal" }' -u $admin $api/invoice/|jq .invoice_number
+	-d '{ "customer": "'$api'/users/2/", "specification": "Kilometerkoll elektronisk körkournal", "duedate": "2017-04-11T13:13:05.392975Z" }' -u $admin $api/invoice/|jq .invoice_number
+	curl -s -H "$header1" -H "$header2" -X POST \
+	-d '{ "customer": "'$api'/users/2/", "specification": "Kilometerkoll elektronisk körkournal", "duedate": "2016-04-11T13:13:05.392975Z", "is_paid": true }' -u $admin $api/invoice/|jq .invoice_number
 	curl -s -H "$header1" -H "$header2" -X POST \
 	-d '{ "customer": "'$api'/users/3/", "is_paid": true, "specification": "Kilometerkoll elektronisk körkournal" }' -u $admin $api/invoice/|jq .invoice_number
 	
@@ -131,6 +133,13 @@ make_invoices() {
 	while read link_id ; do
 		echo "http://$host/invoice?l=$link_id"
 	done
+}
+
+due_invoices() {
+	echo "invoices due for user"
+	echo 078912345
+	curl -s -H "$header1" -H "$header2" -u 078912345:12345 $api/invoicesdue/
+
 }
 
 unauthorized_invoice() {
@@ -151,6 +160,7 @@ default_testsuite() {
 	assign_drivers
     query_vehicles
     make_invoices
+    due_invoices
 	test_odosnap_simple
 	echo "testing ocr accuracy"
 	test_ocr | grep -q 45678 && echo OK
@@ -163,6 +173,7 @@ default_testsuite() {
 invoice_testsuite() {
 	make_users
 	make_invoices
+	due_invoices
 }
 
 default_testsuite

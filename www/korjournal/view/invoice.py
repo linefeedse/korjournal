@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import authentication, permissions
 from korjournal.serializers import InvoiceSerializer
 from korjournal.model.invoice import Invoice
 from django.core.mail import EmailMessage
@@ -8,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.template.loader import get_template
 from django.template import Context
 import tempfile, os
+from django.utils import timezone
 
 
 def view(request):
@@ -74,5 +78,21 @@ def email(request):
     os.remove(pdfname)
     return render(request, 'korjournal/emailsent.html', {'email': invoice.customer_address})
 
+class InvoicesDue(APIView):
+    authentication_classes = (authentication.TokenAuthentication, authentication.BasicAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, format=None):
+        invoicedue = Invoice.objects.filter(customer=request.user, duedate__lt=timezone.now(), is_paid=False)
+        response = {}
+        invoice_summaries = []
+        for invoice in invoicedue:
+            invoice_summaries.append({
+                "duedate": invoice.duedate,
+                "link_id": invoice.link_id
+                })
+        if (len(invoicedue) > 0):
+            response['results'] = invoice_summaries
+        return Response(response)
 
 

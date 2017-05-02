@@ -6,22 +6,26 @@ import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 
-public class RegistrationRequiredDialogFragment extends DialogFragment {
+public class InvoiceDueDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        final String message = getArguments().getString("message");
+        final String link_id = getArguments().getString("link_id");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(message)
-                .setPositiveButton(R.string.go_to_settings, new DialogInterface.OnClickListener() {
+        builder.setMessage("Du har en förfallen faktura. För att säkerställa att du alltid har tillgång till Kilometerkoll, betala den omgående.")
+                .setPositiveButton("Gå till fakturan", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        ((MainActivity)getActivity()).showSettings();
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse("http://kilometerkoll.se/invoice/?l=" + link_id));
+                        startActivity(intent);
                     }
                 })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                .setNegativeButton("Senare!", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // User cancelled the dialog
                     }

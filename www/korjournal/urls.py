@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^report/$', report.report, name='report'),
     url(r'^invoice/', invoice.view, name='invoice'),
     url(r'^invoicelist/', invoicelist.invoicelist, name='invoicelist'),
+    url(r'^api/invoicesdue/$', invoice.InvoicesDue.as_view(), name='invoicesdue'),
     url(r'^api/', include(router.urls)),
     url(r'^api-auth/$', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^login/', 'django.contrib.auth.views.login', name='login'),

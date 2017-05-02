@@ -41,6 +41,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -153,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements
                     @Override
                     public void done(JSONObject ignored) {
                         requestOdosnaps();
+                        requestInvoices();
                         mSendQueue.sendAll(mApi);
                     }
                     @Override
@@ -381,6 +383,31 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 }
         );
+    }
+
+    private void requestInvoices() {
+        mApi.get_invoices_due(new KorjournalAPIInterface() {
+            @Override
+            public void done(JSONObject response) {
+                try {
+                    JSONArray invoices = response.getJSONArray("results");
+                    InvoiceDueDialogFragment invoicesDue = new InvoiceDueDialogFragment();
+                    Bundle args = new Bundle();
+                    JSONObject firstDue = invoices.getJSONObject(0);
+                    args.putString("link_id", firstDue.getString("link_id"));
+                    invoicesDue.setArguments(args);
+                    invoicesDue.show(getFragmentManager(),"invoice_due");
+                }
+                catch (JSONException e) {
+                    // no invoices due
+                }
+            }
+
+            @Override
+            public void error(String error) {
+
+            }
+        });
     }
 
     private void sendOdometersnap() {
