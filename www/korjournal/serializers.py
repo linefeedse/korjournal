@@ -43,7 +43,7 @@ class OdometerImageSerializer(serializers.HyperlinkedModelSerializer):
     driver = serializers.ReadOnlyField(source='driver.username')
     class Meta:
         model = OdometerImage
-        fields = ('url','odometersnap','imagefile','driver')
+        fields = ('url','odometersnap','imagefile','driver', 'guess0', 'guess1', 'guess2', 'guess3', 'guess4')
 
 class RegisterCodeSerializer(serializers.ModelSerializer):
     class Meta:

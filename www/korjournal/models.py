@@ -47,6 +47,11 @@ class OdometerImage(models.Model):
     driver = models.ForeignKey('auth.User')
     odometersnap = models.OneToOneField('OdometerSnap', unique=True)
     imagefile = models.FileField(upload_to=raw_media_file_name, blank=False)
+    guess0 = models.IntegerField(default=0, blank=True)
+    guess1 = models.IntegerField(default=0, blank=True)
+    guess2 = models.IntegerField(default=0, blank=True)
+    guess3 = models.IntegerField(default=0, blank=True)
+    guess4 = models.IntegerField(default=0, blank=True)
 
     def __str__(self):
         return "%s" % self.imagefile.name

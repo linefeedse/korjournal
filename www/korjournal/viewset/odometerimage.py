@@ -56,10 +56,13 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
             [ymiddle1, ymiddle2, xmiddle1, xmiddle2]
         ]
 
+        guesses = [0,0,0,0,0]
+
         bestguess = self.runtess(imgfile)
-        if bestguess < lim_min or bestguess > lim_max:
-            bestguess = 0
+        guesses[2] = bestguess
+        cropnumber = 0
         for crop in crops:
+
             y1 = crop[0]
             y2 = crop[1]
             x1 = crop[2]
@@ -69,13 +72,49 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
             cv2.imwrite(filename, cropped)
             guess = self.runtess(filename)
             os.unlink(filename)
-            if guess < lim_min or guess > lim_max:
+            if guess == 0 or guess in guesses:
+                continue
+            if guess < lim_min:
+                if guesses[1] < guess:
+                    guesses[0] = guesses[1]
+                guesses[1] = guess
+                continue
+            if guess > lim_max:
+                if guesses[3] > guess:
+                    guesses[4] = guesses[3]
+                guesses[3] = guess
                 continue
             if guess == bestguess:
-                break
+                if guesses[2] > bestguess:
+                    guesses[4] = guesses[3]
+                    guesses[3] = guesses[2]
+                    guesses[2] = guess
+                if guesses[2] < bestguess and guesses[2] != 0:
+                    guesses[0] = guesses[1]
+                    guesses[1] = guesses[2]
+                    guesses[2] = guess
+                continue
             if guess > bestguess:
                 bestguess = guess
-        return bestguess
+                if guesses[2] > 0:
+                    guesses[0] = guesses[1]
+                    guesses[1] = guesses[2]
+                guesses[2] = guess
+                continue
+            if guess < bestguess:
+                if guesses[1] > 0:
+                    guesses[0] = guesses[1]
+                guesses[1] = guess
+        if guesses[2] == 0:
+            if guesses[1] > 0:
+                guesses[2] = guesses[1]
+                guesses[1] = guesses[0]
+                guesses[0] = 0
+            elif guesses[3] > 0:
+                guesses[2] = guesses[3]
+                guesses[3] = guesses[4]
+                guesses[4] = 0
+        return guesses
 
     def perform_create(self,serializer):
         imgfile = self.request.FILES.get('imagefile')
@@ -94,14 +133,20 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
             lim_min = prev_odometers[1].odometer
 
             since_days = timezone.now() - prev_odometers[1].when
-            max_km_per_day = 1100
+            max_km_per_day = 300
             lim_max = prev_odometers[1].odometer + since_days.days * max_km_per_day + max_km_per_day
         except IndexError:
             pass
         if (odoimage.odometersnap.odometer < 1):
-            newodokm = self.do_ocr("/vagrant/www/media/" + odoimage.imagefile.name, lim_max, lim_min)
-            odoimage.odometersnap.odometer = newodokm
+            guesses = self.do_ocr("/vagrant/www/media/" + odoimage.imagefile.name, lim_max, lim_min)
+            odoimage.odometersnap.odometer = guesses[2]
             odoimage.odometersnap.save()
+        odoimage.guess0 = guesses[0]
+        odoimage.guess1 = guesses[1]
+        odoimage.guess2 = guesses[2]
+        odoimage.guess3 = guesses[3]
+        odoimage.guess4 = guesses[4]
+        odoimage.save()
 
     def get_queryset(self):
         return OdometerImage.objects.filter(Q(odometersnap__vehicle__owner=self.request.user)|Q(driver=self.request.user))
