@@ -4,13 +4,13 @@ MAINTAINER Tor-Ake Fransson <tor-ake.fransson@linefeed.se>
 # the echo here will effectively decide machine patch level. Set to todays date
 RUN apt-get update && echo 2017-04-10
 RUN apt-get -y upgrade
-RUN apt-get install -y software-properties-common rsync less
+RUN apt-get install -y software-properties-common rsync less locales tzdata
 
 #
 # Setup locales
 #
 RUN locale-gen en_US.UTF-8
-RUN dpkg-reconfigure locales
+RUN printf '149\n3\n'| dpkg-reconfigure locales
 RUN echo "LC_CTYPE=en_US.UTF-8\nLC_ALL=en_US.UTF-8\nLANG=en_US.UTF-8\nLANGUAGE=en_US.UTF-8" | tee -a /etc/environment > /dev/null
 
 #
