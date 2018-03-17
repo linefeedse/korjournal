@@ -83,8 +83,21 @@ public class Position {
             Address address = addresses.get(0);
             ArrayList<String> addressFragments = new ArrayList<String>();
 
-            for(int i = 0; i < address.getMaxAddressLineIndex(); i++) {
-                addressFragments.add(address.getAddressLine(i));
+            int numAddressLines = address.getMaxAddressLineIndex();
+            if (numAddressLines > 0) {
+                // This seems to be the case except for 8.1.0
+                for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                    addressFragments.add(address.getAddressLine(i));
+                }
+            } else {
+                // This works for 8.1.0
+                addressFragments.add(
+                        (address.getThoroughfare() != null ? address.getThoroughfare() + " " : "" ) +
+                                (address.getSubThoroughfare() != null ? address.getSubThoroughfare() + " " :
+                                        (address.getFeatureName() != null ? address.getFeatureName() : "")));
+                addressFragments.add(
+                        (address.getPostalCode() != null ? address.getPostalCode() + " " : "") +
+                                (address.getLocality() != null ? address.getLocality() : ""));
             }
             return TextUtils.join(",", addressFragments);
         }
