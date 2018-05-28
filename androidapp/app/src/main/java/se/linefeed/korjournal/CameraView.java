@@ -5,6 +5,7 @@ import android.hardware.Camera;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -14,6 +15,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
     private CameraActivity mContext;
     private Camera mCamera;
+    private GuideView siblingView;
 
     public CameraView(Context context, Camera camera){
         super(context);
@@ -39,6 +41,14 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    public void setSiblingView(GuideView g) {
+        siblingView = g;
+        if (siblingView != null) {
+            siblingView.setVisibility(View.INVISIBLE);
+        }
+
+    }
+
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int width, int height) {
         //before changing the application orientation, you need to stop the preview, rotate and then start it again
@@ -54,17 +64,21 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
             // landscape mode
             mCamera.setDisplayOrientation(0);
             mContext.cameraOrientation = 0;
-            setZoom(1);
+            setZoom(1.2f);
         } else {
             mCamera.setDisplayOrientation(90);
             mContext.cameraOrientation = 90;
-            setZoom(1.5f);
+            setZoom(1.3f);
         }
         Log.d("CameraView","Orientation is now " + mContext.cameraOrientation);
         //now, recreate the camera preview
         try{
             mCamera.setPreviewDisplay(mHolder);
             mCamera.startPreview();
+            if (siblingView != null) {
+                siblingView.setVisibility(View.INVISIBLE);
+                siblingView.setVisibility(View.VISIBLE);
+            }
         } catch (IOException e) {
             Log.d("ERROR", "Camera error on surfaceChanged " + e.getMessage());
         }

@@ -41,10 +41,14 @@ public class CameraActivity extends AppCompatActivity {
             Log.d("ERROR", "Failed to get camera: " + e.getMessage());
         }
 
+        mGuideView = (GuideView) findViewById(R.id.guideView);
+        mGuideView.getHolder().addCallback(mGuideView);
+
         FrameLayout camera_view = (FrameLayout)findViewById(R.id.camera_view);
         if(mCamera != null) {
             mCameraView = new CameraView(this, mCamera);//create a SurfaceView to show camera data
             camera_view.addView(mCameraView);//add the SurfaceView to the layout
+            mCameraView.setSiblingView(mGuideView);
         }
         mGuideView = (GuideView) findViewById(R.id.guideView);
         mGuideView.getHolder().addCallback(mGuideView);
@@ -61,6 +65,11 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
@@ -70,6 +79,8 @@ public class CameraActivity extends AppCompatActivity {
             params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             mCamera.setParameters(params);
         }
+        mGuideView.setVisibility(View.INVISIBLE);
+        mGuideView.setVisibility(View.VISIBLE);
     }
 
     Camera.PictureCallback rawCallback = new Camera.PictureCallback() {
