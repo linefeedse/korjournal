@@ -137,6 +137,7 @@ class OdometerImageViewSet(viewsets.ModelViewSet):
             lim_max = prev_odometers[1].odometer + since_days.days * max_km_per_day + max_km_per_day
         except IndexError:
             pass
+        guesses = [0,0,0,0,0]
         if (odoimage.odometersnap.odometer < 1):
             guesses = self.do_ocr("/vagrant/www/media/" + odoimage.imagefile.name, lim_max, lim_min)
             odoimage.odometersnap.odometer = guesses[2]
