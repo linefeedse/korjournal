@@ -31,6 +31,7 @@ class YearVehicleForm(Form):
         ('2016','2016'),
         ('2017','2017'),
         ('2018','2018'),
+        ('2019','2019'),
     )
 
     vehicle = ChoiceField(label="Fordon",choices=VEHICLES,required=True)

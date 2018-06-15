@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotFound
 from django.utils import timezone
 from datetime import timedelta
-from dateutil import tz, parser
+from dateutil import tz, parser, relativedelta
+from dateutil.relativedelta import relativedelta
 from rest_framework import viewsets, permissions, filters, serializers
 from rest_framework.decorators import api_view, permission_classes
 from korjournal.models import OdometerSnap, OdometerImage, Driver, Vehicle
@@ -21,11 +22,17 @@ class OdometerSnapViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwner, IsDriver)
     filter_backends = (filters.OrderingFilter,)
     ordering_fields = '__all__'
-    
+
     def get_queryset(self):
         queryset = OdometerSnap.objects.filter(Q(vehicle__owner=self.request.user)|Q(driver=self.request.user))
         after = self.request.query_params.get('after', None)
         days = self.request.query_params.get('days', None)
+        month = self.request.query_params.get('month', None)
+        if month is not None:
+            month_first=parser.parse('%s-01 00:00' % month)
+            month_last=month_first+relativedelta(day=31)+timedelta(days=1,seconds=-1)
+            queryset = queryset.filter(Q(when__gte=month_first.isoformat())&Q(when__lte=month_last.isoformat()))
+            return queryset
         if after is not None:
             after_when = parser.parse(after)
             queryset = queryset.filter(Q(when__gte=after_when.isoformat()))
