@@ -8,14 +8,16 @@ public class TripListModel {
 
     private String when;
     private String toAddress;
-    private String kmString;
+    private String startKmString;
+    private String endKmString;
     private String fromAddress;
     private String reason;
 
-    public TripListModel(String when, String toAddress, String kmString, String fromAddress, String reason) {
+    public TripListModel(String when, String toAddress, String startKmString, String endKmString, String fromAddress, String reason) {
         this.when = when;
         this.toAddress = toAddress;
-        this.kmString = kmString;
+        this.startKmString = startKmString;
+        this.endKmString= endKmString;
         this.fromAddress = fromAddress;
         this.reason = reason;
     }
@@ -23,7 +25,8 @@ public class TripListModel {
     public TripListModel(TripListModel copyThis) {
         this.when = copyThis.getWhen();
         this.toAddress = copyThis.getToAddress();
-        this.kmString = copyThis.getKmString();
+        this.startKmString = copyThis.getStartKmString();
+        this.endKmString = copyThis.getEndKmString();
         this.fromAddress = copyThis.getFromAddress();
         this.reason = copyThis.getReason();
     }
@@ -31,6 +34,8 @@ public class TripListModel {
     public String getWhen() {
         return when;
     }
+
+    public String getWhenDay() { return when.substring(0,10); }
 
     public void setWhen(String when) {
         this.when = when;
@@ -45,11 +50,22 @@ public class TripListModel {
     }
 
     public String getKmString() {
-        return kmString;
+        return startKmString + " - " + endKmString;
     }
 
-    public void setKmString(String kmString) {
-        this.kmString = kmString;
+    public String getStartKmString() {
+        return startKmString;
+    }
+    public String getEndKmString() {
+        return endKmString;
+    }
+
+    public void setStartKmString(String kmString) {
+        this.startKmString = kmString;
+    }
+
+    public void setEndKmString(String kmString) {
+        this.endKmString = kmString;
     }
 
     public String getFromAddress() {

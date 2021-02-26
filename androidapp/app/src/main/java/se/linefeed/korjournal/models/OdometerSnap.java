@@ -15,9 +15,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import se.linefeed.korjournal.DatabaseOpenHelper;
+import se.linefeed.korjournal.api.JsonAPIResponseInterface;
 import se.linefeed.korjournal.api.KorjournalAPI;
-import se.linefeed.korjournal.api.KorjournalAPIInterface;
 
 public class OdometerSnap {
 
@@ -296,13 +295,13 @@ public class OdometerSnap {
         this.url = url;
     }
 
-    public void sendApi(KorjournalAPI korjournalAPI, KorjournalAPIInterface done) {
-        korjournalAPI.send_odometersnap(this, done);
+    public void sendApi(KorjournalAPI kilometerkollAPI, JsonAPIResponseInterface done) {
+        kilometerkollAPI.send_odometersnap(this, done);
     }
-    public void sendImage(KorjournalAPI korjournalAPI, KorjournalAPIInterface done) {
+    public void sendImage(KorjournalAPI kilometerkollAPI, JsonAPIResponseInterface done) {
         if (picturePath == null)
             return;
-        korjournalAPI.send_odoimage(this.getPicturePath(),
+        kilometerkollAPI.send_odoimage(this.getPicturePath(),
                 this.getUrl(),
                 done);
     }

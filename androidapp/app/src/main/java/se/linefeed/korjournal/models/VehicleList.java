@@ -7,10 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Handler;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 
 import org.json.JSONObject;
 
@@ -18,8 +16,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import se.linefeed.korjournal.DatabaseOpenHelper;
+import se.linefeed.korjournal.api.JsonAPIResponseInterface;
 import se.linefeed.korjournal.api.KorjournalAPI;
-import se.linefeed.korjournal.api.KorjournalAPIInterface;
 
 public class VehicleList {
     private ArrayList<String> vehicleSelectorArrayList;
@@ -86,7 +84,10 @@ public class VehicleList {
         }
     }
 
-    public void request(KorjournalAPI mApi, final TextView statusText, final SharedPreferences sharedPreferences, final KorjournalAPIInterface done) {
+    public void request(KorjournalAPI mApi,
+                        final SharedPreferences sharedPreferences,
+                        final JsonAPIResponseInterface done,
+                        final Response.ErrorListener errorListener) {
         final HashMap<String, Vehicle> myVehicles = new HashMap<String, Vehicle>();
         final HashMap<String, Vehicle> dbVehicles = new HashMap<String, Vehicle>();
         final DatabaseOpenHelper dboh = new DatabaseOpenHelper(mContext);
@@ -113,9 +114,8 @@ public class VehicleList {
         cursor.close();
         db.close();
 
-        statusText.setText("Hämtar fordon...");
         mApi.get_vehicles(myVehicles,
-                new KorjournalAPIInterface() {
+                new JsonAPIResponseInterface() {
                     @Override
                     public void done(JSONObject response) {
                         SQLiteDatabase db = dboh.getWritableDatabase();
@@ -129,12 +129,10 @@ public class VehicleList {
                         vehicles = myVehicles;
                         vehicleSpinnerAdapter.notifyDataSetChanged();
                         resetSelected(sharedPreferences);
-                        statusText.setText("Klar!");
                         done.done(null);
                     }
                     @Override
                     public void error(String e) {
-                        statusText.setText(e);
                         if (vehicleSelectorArrayList.size() == 0) {
                             vehicleSelectorArrayList.add("Fel: inga fordon!");
                             vehicleSpinnerAdapter.notifyDataSetChanged();
@@ -142,16 +140,7 @@ public class VehicleList {
                     }
 
                 },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                    statusText.setText(error.getMessage());
-                    if (vehicleSelectorArrayList.size() == 0) {
-                        vehicleSelectorArrayList.add("Fel: inga fordon!");
-                        vehicleSpinnerAdapter.notifyDataSetChanged();
-                    }
-                    }
-                }
+                errorListener
         );
         vehicleSpinnerAdapter.notifyDataSetChanged();
     }

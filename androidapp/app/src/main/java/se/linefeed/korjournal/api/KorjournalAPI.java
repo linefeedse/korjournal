@@ -2,7 +2,6 @@ package se.linefeed.korjournal.api;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.location.Location;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
@@ -44,7 +43,7 @@ public class KorjournalAPI {
     private String username;
     private String password;
     private Context mContext;
-    private final String base_url = "http://kilometerkoll.se";
+    private final String base_url = "https://kilometerkoll.se";
 
     private HashMap<String,String> getAuthorizationHeaders() {
         HashMap<String, String> headers = new HashMap<String, String>();
@@ -61,13 +60,18 @@ public class KorjournalAPI {
         password = sharedPreferences.getString("code_text","");
     }
 
+    public void reloadCredentials() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+        username = sharedPreferences.getString("username_text","");
+        password = sharedPreferences.getString("code_text","");
+    }
     /**
      * Ask for a list of vehicles i am permitted to see
      * @param myVehicles
      * @param done
      * @param errorListener
      */
-    public void get_vehicles(final HashMap<String,Vehicle> myVehicles, final KorjournalAPIInterface done, Response.ErrorListener errorListener) {
+    public void get_vehicles(final HashMap<String,Vehicle> myVehicles, final JsonAPIResponseInterface done, Response.ErrorListener errorListener) {
         final String api_url = base_url + "/api/vehicle/";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
@@ -84,7 +88,7 @@ public class KorjournalAPI {
                                 myVehicles.put(vehicle.getName(), vehicle);
                             }
                         } catch (JSONException e) {
-                            done.error("JSON-fel!");
+                            done.error("JSON-fel! 004");
                         }
                         done.done(response);
                     }
@@ -131,10 +135,10 @@ public class KorjournalAPI {
      * Upload an image for a previously sent odometer reading
      * @param odoImageFile String full path to file to send
      * @param linkedOdo String as "http://host/api/vehicle/2/
-     * @param done KorjournalAPIInterface
+     * @param done JsonAPIResponseInterface
      */
 
-    public void send_odoimage(final String odoImageFile,final String linkedOdo, final KorjournalAPIInterface done) {
+    public void send_odoimage(final String odoImageFile,final String linkedOdo, final JsonAPIResponseInterface done) {
         final String url = base_url + "/api/odometerimage/";
         if (odoImageFile == null || linkedOdo == null) {
             return;
@@ -214,13 +218,58 @@ public class KorjournalAPI {
         mRequestQueue.add(request);
     }
 
-    public void send_odometersnap(OdometerSnap odometerSnap, final KorjournalAPIInterface done){
+    public void send_odometersnap(OdometerSnap odometerSnap, final JsonAPIResponseInterface done){
         final String url = base_url + "/api/odometersnap/";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
 
         MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.POST, url, odometerSnap.toJSON(),
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        done.done(response);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if (error.networkResponse != null) {
+                            done.error("" + error.networkResponse.statusCode);
+                            return;
+                        }
+                        done.error("Unknown Volley Error");
+                    }
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                return getAuthorizationHeaders();
+            }
+
+        };
+        // Add the request to the RequestQueue.
+        mRequestQueue.add(req);
+    }
+
+    public void patch_odometersnap_reason(OdometerSnap odometerSnap, final JsonAPIResponseInterface done){
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(mContext);
+        }
+
+        if (odometerSnap == null) {
+            done.error("odometerSnap is null");
+        }
+
+        if (odometerSnap.getReason() == null) {
+            done.error("odometerSnap reason is null");
+        }
+
+        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.PATCH,
+                odometerSnap.getUrl(),
+                String.format(Locale.getDefault(),
+                        "{ \"why\": \"%s\" }",
+                        odometerSnap.getReason().replace("\"","''")),
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -244,12 +293,13 @@ public class KorjournalAPI {
         mRequestQueue.add(req);
     }
 
+
     /**
      * Ask for odometersnaps I am allowed to see
      * @param errorListener
      */
-    public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, final KorjournalAPIInterface done, Response.ErrorListener errorListener) {
-        final String api_url = base_url + "/api/odometersnap/?days=30";
+    public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, int days, final JsonAPIResponseInterface done, Response.ErrorListener errorListener) {
+        final String api_url = base_url + "/api/odometersnap/?days=" + Integer.toString(days);
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);
         }
@@ -283,7 +333,48 @@ public class KorjournalAPI {
         mRequestQueue.add(req);
     }
 
-    public void tryRegisterCode(final String phone, final String code, final KorjournalAPIInterface done) {
+    /**
+     * Ask for odometersnaps I am allowed to see
+     * @param errorListener
+     */
+    public void get_odosnaps(final ArrayList<OdometerSnap> odoSnapArr, int year, int month, final JsonAPIResponseInterface done, Response.ErrorListener errorListener) {
+        final String api_url = base_url + "/api/odometersnap/?month=" + Integer.toString(year) + "-"
+                + String.format(Locale.getDefault(), "%02d", month);
+        if (mRequestQueue == null) {
+            mRequestQueue = Volley.newRequestQueue(mContext);
+        }
+        MyJsonStringRequest req = new MyJsonStringRequest(Request.Method.GET, api_url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray odoSnaps = response.getJSONArray("results");
+                            for (int i=0; i < odoSnaps.length(); i++) {
+                                JSONObject o = odoSnaps.getJSONObject(i);
+                                OdometerSnap oSnap = new OdometerSnap();
+                                odoSnapArr.add(oSnap.loadFromJSON(o));
+                            }
+                        }
+                        catch (JSONException e)
+                        {
+                            done.error("get_odosnaps JSON-fel!" + e.getMessage());
+                        }
+                        done.done(null);
+                    }
+                },
+                errorListener
+        ) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                return getAuthorizationHeaders();
+            }
+        };
+        // Add the request to the RequestQueue.
+        mRequestQueue.add(req);
+    }
+
+
+    public void tryRegisterCode(final String phone, final String code, final JsonAPIResponseInterface done) {
         final String VER_URL = base_url + "/verify/";
         final String CHK_URL = base_url + "/api/vehicle/";
 
@@ -348,9 +439,9 @@ public class KorjournalAPI {
 
     /**
      * Ask for invoices due
-     * @param done KorjournalAPIInterface
+     * @param done JsonAPIResponseInterface
      */
-    public void get_invoices_due(final KorjournalAPIInterface done) {
+    public void get_invoices_due(final JsonAPIResponseInterface done) {
         final String api_url = base_url + "/api/invoicesdue/";
         if (mRequestQueue == null) {
             mRequestQueue = Volley.newRequestQueue(mContext);

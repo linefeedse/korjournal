@@ -5,7 +5,6 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +34,11 @@ public class Position {
      * @param location
      */
     public Position(Location location) {
+        if (location == null) {
+            this.poslat = 0.0;
+            this.poslong = 0.0;
+            return;
+        }
         this.poslat = location.getLatitude();
         this.poslong = location.getLongitude();
     }
@@ -82,23 +86,17 @@ public class Position {
         else {
             Address address = addresses.get(0);
             ArrayList<String> addressFragments = new ArrayList<String>();
-
-            int numAddressLines = address.getMaxAddressLineIndex();
-            if (numAddressLines > 0) {
-                // This seems to be the case except for 8.1.0
-                for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
-                    addressFragments.add(address.getAddressLine(i));
-                }
-            } else {
-                // This works for 8.1.0
-                addressFragments.add(
-                        (address.getThoroughfare() != null ? address.getThoroughfare() + " " : "" ) +
-                                (address.getSubThoroughfare() != null ? address.getSubThoroughfare() + " " :
-                                        (address.getFeatureName() != null ? address.getFeatureName() : "")));
-                addressFragments.add(
-                        (address.getPostalCode() != null ? address.getPostalCode() + " " : "") +
-                                (address.getLocality() != null ? address.getLocality() : ""));
+            int maxAddressLineIndex = address.getMaxAddressLineIndex();
+            for(int i = 0; i < address.getMaxAddressLineIndex(); i++) {
+                addressFragments.add(address.getAddressLine(i));
             }
+            addressFragments.add(
+                    (address.getThoroughfare() != null ? address.getThoroughfare() + " " : "" ) +
+                            (address.getSubThoroughfare() != null ? address.getSubThoroughfare() + " " :
+                                (address.getFeatureName() != null ? address.getFeatureName() : "")));
+            addressFragments.add(
+                    (address.getPostalCode() != null ? address.getPostalCode() + " " : "") +
+                    (address.getLocality() != null ? address.getLocality() : ""));
             return TextUtils.join(",", addressFragments);
         }
     }

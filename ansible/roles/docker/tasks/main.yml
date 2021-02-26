@@ -1,4 +1,0 @@
----
-- name: docker
-  apt: name=docker.io state=installed
-  tags: [docker]

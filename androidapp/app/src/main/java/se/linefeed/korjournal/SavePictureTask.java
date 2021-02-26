@@ -3,46 +3,48 @@ package se.linefeed.korjournal;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Camera;
 import android.graphics.Matrix;
-import android.media.ExifInterface;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 class SavePictureTask extends AsyncTask<byte[], Void, Void> {
-    private Context mContext;
+    private WeakReference<Context> mContext;
     public SavePictureTask (Context context) {
-        mContext = context;
+        mContext = new WeakReference<Context>(context);
     }
     @Override
     protected Void doInBackground(byte[]... data) {
         FileOutputStream outStream = null;
-
         byte[] jpegData = data[0];
+        CameraActivity cameraActivity = (CameraActivity) mContext.get();
+
+        if (cameraActivity == null || cameraActivity.isFinishing()) {
+            return null;
+        }
+
         Bitmap bm = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.length);
 
-        int orientation = ((CameraActivity) mContext).cameraOrientation;
+        int orientation = cameraActivity.cameraOrientation;
 
         Matrix matrix = new Matrix();
         matrix.preRotate(orientation);
 
         int width,height,bottom,left;
         if (orientation == 0) {
-            width = (int) (bm.getWidth() * 0.8f);
+            width = (int) (bm.getWidth() * 0.6f);
             height = (int) (bm.getHeight() * 0.3f);
-            left = (int) (bm.getWidth() * 0.1f);
+            left = (int) (bm.getWidth() * 0.2f);
             bottom = (int) (bm.getHeight() * 0.35f);
         } else {
-            width = (int) (bm.getHeight() * 0.6f);
+            width = (int) (bm.getHeight() * 0.4f);
             height = (int) (bm.getWidth() * 0.1f);
-            left = (int) (bm.getHeight() * 0.2f);
+            left = (int) (bm.getHeight() *  0.30f);
             bottom = (int) (bm.getWidth() * 0.45f);
         }
 
@@ -51,7 +53,7 @@ class SavePictureTask extends AsyncTask<byte[], Void, Void> {
 
         // Write to SD Card
         try {
-            File dir = new File(mContext.getExternalFilesDir(null),"korjournal");
+            File dir = new File(cameraActivity.getExternalFilesDir(null),"korjournal");
             dir.mkdirs();
 
             String fileName = String.format("%d.jpg", System.currentTimeMillis());
@@ -64,7 +66,6 @@ class SavePictureTask extends AsyncTask<byte[], Void, Void> {
 
             Log.i("INFO", "doInBackground wrote image " + width + " " + height + " to " + outFile.getAbsolutePath());
 
-            //refreshGallery(outFile);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -73,5 +74,4 @@ class SavePictureTask extends AsyncTask<byte[], Void, Void> {
         }
         return null;
     }
-
 }

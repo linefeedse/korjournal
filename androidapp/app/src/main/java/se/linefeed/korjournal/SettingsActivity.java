@@ -4,18 +4,21 @@ package se.linefeed.korjournal;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
+import android.view.View;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -25,6 +28,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -33,7 +37,9 @@ import java.util.List;
 import java.util.Map;
 
 import se.linefeed.korjournal.api.KorjournalAPI;
-import se.linefeed.korjournal.api.KorjournalAPIInterface;
+import se.linefeed.korjournal.api.JsonAPIResponseInterface;
+import se.linefeed.korjournal.api.StringAPIResponseInterface;
+import se.linefeed.korjournal.api.TeslaAPI;
 import se.linefeed.korjournal.models.Vehicle;
 
 /**
@@ -161,7 +167,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || UserPreferenceFragment.class.getName().equals(fragmentName)
-                || VehiclePreferenceFragment.class.getName().equals(fragmentName);
+                || VehiclePreferenceFragment.class.getName().equals(fragmentName)
+                || TeslaPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -261,7 +268,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             final String phone = PreferenceManager
                     .getDefaultSharedPreferences(context)
                     .getString(usernamePreference.getKey(),"");
-            api.tryRegisterCode(phone, newCode, new KorjournalAPIInterface() {
+            api.tryRegisterCode(phone, newCode, new JsonAPIResponseInterface() {
                 @Override
                 public void done(JSONObject response) {
                     codeText.setSummary("OK!");
@@ -292,11 +299,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
             vehicleListPreference = (ListPreference) findPreference("vehicle_list");
             bindPreferenceSummaryToValue(vehicleListPreference);
-            updateVehicleList();
+           updateVehicleList();
             if (mApi == null) {
                 mApi = new KorjournalAPI(getActivity());
             }
-
             newVehicleName = (Preference)findPreference("new_vehicle_name");
             newVehicleName.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
@@ -317,6 +323,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                             }
                     );
                     return true;
+
                 }
             });
 
@@ -347,7 +354,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 mApi = new KorjournalAPI(getActivity());
             }
             mApi.get_vehicles(vehicles,
-                    new KorjournalAPIInterface() {
+                    new JsonAPIResponseInterface() {
                         @Override
                         public void done(JSONObject response) {
                             for (String vName: vehicles.keySet()) {
@@ -370,6 +377,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                         public void onErrorResponse(VolleyError error) {
                             CharSequence[] err = { "Kunde inte hämta fordon" };
                             CharSequence[] errVal = { "0" };
+                            Log.e("Error", "error is " + error.toString());
                             vehicleListPreference.setEntries(err);
                             vehicleListPreference.setEntryValues(errVal);
                         }
@@ -377,4 +385,83 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             );
         }
     }
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class TeslaPreferenceFragment extends PreferenceFragment {
+        protected Preference usernamePreference;
+        protected Preference passwordPreference;
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_teslacreds);
+            setHasOptionsMenu(true);
+            usernamePreference = findPreference(TeslaAPI.PREF_TESLA_API_USERNAME);
+            passwordPreference = findPreference(TeslaAPI.PREF_TESLA_API_PASSWORD);
+            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
+            // to their values. When their values change, their summaries are
+            // updated to reflect the new value, per the Android Design
+            // guidelines.
+            bindPreferenceSummaryToValue(usernamePreference);
+            passwordPreference.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object newValue) {
+                    if (!newValue.equals("")) {
+                        final Context preferenceContext = usernamePreference.getContext();
+                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(preferenceContext).edit();
+                        editor.putString(TeslaAPI.PREF_TESLA_API_PASSWORD,"");
+                        editor.apply();
+                        passwordPreference.setSummary("");
+                        passwordPreference.setPersistent(false);
+                        try {
+                            TeslaAPI.getNewAccessToken(preferenceContext, (String) newValue, new JsonAPIResponseInterface() {
+                                @Override
+                                public void done(JSONObject response) {
+                                    try {
+                                        String accessToken = response.getString("access_token");
+                                        Long expires_at = response.getLong("expires_in") + response.getLong("created_at");
+                                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(preferenceContext).edit();
+                                        editor.putString(TeslaAPI.PREF_TESLA_API_TOKEN, accessToken);
+                                        editor.putLong(TeslaAPI.PREF_TESLA_API_TOKEN_EXPIRES, expires_at);
+                                        editor.apply();
+                                        View view = getView();
+                                        Snackbar snackbar = Snackbar.make(view, "En ny accesstoken har genererats", Snackbar.LENGTH_LONG);
+                                        snackbar.show();
+                                    } catch (JSONException e) {
+                                        View view = getView();
+                                        Snackbar snackbar = Snackbar.make(view, "Accesstokenfel: JSONFel. Uppgradera appen.", Snackbar.LENGTH_LONG);
+                                        snackbar.show();
+                                    }
+                                }
+
+                                @Override
+                                public void error(String error) {
+                                    View view = getView();
+                                    Snackbar snackbar = Snackbar.make(view, "Accesstokenfel: Fel lösenord?", Snackbar.LENGTH_LONG);
+                                    snackbar.show();
+                                }
+                            });
+                        }
+                        catch (Exception e) {
+                            View view = getView();
+                            Snackbar snackbar = Snackbar.make(view, "Accesstokenfel. Uppgradera appen.", Snackbar.LENGTH_LONG);
+                            snackbar.show();
+                        }
+                    }
+                    return true;
+                }
+            });
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+
+            return super.onOptionsItemSelected(item);
+        }
+
+    }
+
 }

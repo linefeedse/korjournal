@@ -1,3 +1,0 @@
----
-webapp_mediaroot: /var/www/media
-webapp_logroot: /var/log/korjournal

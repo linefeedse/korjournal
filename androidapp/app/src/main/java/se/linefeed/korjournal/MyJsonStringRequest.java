@@ -10,9 +10,6 @@ import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 
-/**
- * Created by torkel on 2016-05-10.
- */
 public class MyJsonStringRequest extends MyJsonRequest<JSONObject> {
     public MyJsonStringRequest(int method, String url, String jsonRequest,
                              Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {

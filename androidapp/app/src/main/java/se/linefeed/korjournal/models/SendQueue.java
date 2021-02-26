@@ -3,17 +3,14 @@ package se.linefeed.korjournal.models;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Handler;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-
 import se.linefeed.korjournal.DatabaseOpenHelper;
+import se.linefeed.korjournal.api.JsonAPIResponseInterface;
 import se.linefeed.korjournal.api.KorjournalAPI;
-import se.linefeed.korjournal.api.KorjournalAPIInterface;
 
 public class SendQueue {
     private Context mContext = null;
@@ -30,7 +27,7 @@ public class SendQueue {
         db.close();
     }
 
-    public void sendAll(final KorjournalAPI korjournalAPI) {
+    public void sendAll(final KorjournalAPI kilometerkollAPI) {
         final DatabaseOpenHelper dboh = new DatabaseOpenHelper(mContext);
         SQLiteDatabase db = dboh.getReadableDatabase();
         String orderBy = null;
@@ -54,8 +51,8 @@ public class SendQueue {
                     @Override
                     public void run() {
                         odometerSnap.updateStreetAddress(mContext);
-                        odometerSnap.sendApi(korjournalAPI,
-                                new KorjournalAPIInterface() {
+                        odometerSnap.sendApi(kilometerkollAPI,
+                                new JsonAPIResponseInterface() {
                                     @Override
                                     public void done(JSONObject response) {
                                         // XXX Fixme send picture if there is a picturepath...
@@ -70,8 +67,8 @@ public class SendQueue {
                                         }
                                         try {
                                             odometerSnap.setUrl(response.get("url").toString());
-                                            odometerSnap.sendImage(korjournalAPI,
-                                                new KorjournalAPIInterface() {
+                                            odometerSnap.sendImage(kilometerkollAPI,
+                                                new JsonAPIResponseInterface() {
                                                     @Override
                                                     public void done(JSONObject response) {
                                                         try {

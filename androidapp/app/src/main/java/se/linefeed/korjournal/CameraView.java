@@ -15,7 +15,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder mHolder;
     private CameraActivity mContext;
     private Camera mCamera;
-    private GuideView siblingView;
+    private GuideView siblingView = null;
 
     public CameraView(Context context, Camera camera){
         super(context);
@@ -27,6 +27,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         //get the holder and set this class as the callback, so we can get camera data here
         mHolder = getHolder();
         mHolder.addCallback(this);
+//        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_NORMAL);
     }
 
@@ -64,7 +65,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
             // landscape mode
             mCamera.setDisplayOrientation(0);
             mContext.cameraOrientation = 0;
-            setZoom(1.2f);
+            setZoom(1);
         } else {
             mCamera.setDisplayOrientation(90);
             mContext.cameraOrientation = 90;
@@ -90,6 +91,7 @@ public class CameraView extends SurfaceView implements SurfaceHolder.Callback {
         //if you are unsing with more screens, please move this code your activity
         mCamera.stopPreview();
         mCamera.release();
+        mCamera = null;
     }
 
     private void setZoom(float level) {

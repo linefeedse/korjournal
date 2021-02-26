@@ -24,7 +24,7 @@ import java.io.UnsupportedEncodingException;
  * Based on anggadarkprince VolleyMultiPartRequest
  */
 public class MyMultipartRequest extends Request<NetworkResponse> {
-    private final String boundary = "korjournalapp-" + System.currentTimeMillis();
+    private final String boundary = "kilometerkollapp-" + System.currentTimeMillis();
     private final String lineEnd = "\r\n";
     private final String dashDash = "--";
 

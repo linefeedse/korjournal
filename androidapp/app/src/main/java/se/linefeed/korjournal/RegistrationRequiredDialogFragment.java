@@ -7,6 +7,9 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+
+import se.linefeed.korjournal.R;
 
 public class RegistrationRequiredDialogFragment extends DialogFragment {
 
@@ -18,7 +21,7 @@ public class RegistrationRequiredDialogFragment extends DialogFragment {
         builder.setMessage(message)
                 .setPositiveButton(R.string.go_to_settings, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        ((MainActivity)getActivity()).showSettings();
+                        OptionsMenu.showSettings((AppCompatActivity) getActivity());
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
